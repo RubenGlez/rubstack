@@ -4,7 +4,7 @@ Use this only after `metrics` is triggered and the snapshot has been read.
 
 ## Record schemas
 
-### `~/.rubstack/metrics/recommendations.json`
+### `recommendations` (state artifact; mirrored at `~/.rubstack/metrics/state/recommendations.json`)
 
 ```json
 {
