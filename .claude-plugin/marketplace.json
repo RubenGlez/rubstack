@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "rubstack",
-      "description": "Rubén's software factory for Claude Code: idea-to-ship skill chain, engineering rules, and guard hooks, for local and cloud sessions",
+      "description": "Rubén's software factory for Claude Code: idea-to-ship skill chain and guard hooks, for local and cloud sessions",
       "source": "./",
       "category": "productivity",
       "tags": ["skills", "workflow", "hooks"]
