@@ -34,10 +34,10 @@ if [ -f "$DOCS/qa/report.md" ]; then
   fi
 fi
 
-# Doctier adoption — .rubstack/ should be git-tracked (encrypted)
+# .rubstack/ must be git-tracked (plaintext in private repos, doctier in public ones)
 if git rev-parse --is-inside-work-tree &>/dev/null; then
   if git check-ignore -q "$DOCS" 2>/dev/null || [ -z "$(git ls-files "$DOCS" 2>/dev/null)" ]; then
-    echo "│  ⚠ .rubstack/ not git-tracked — run /migrate-docs to adopt doctier"
+    echo "│  ⚠ .rubstack/ not git-tracked — run /migrate-docs to track it"
   fi
 fi
 

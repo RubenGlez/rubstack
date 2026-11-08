@@ -55,9 +55,9 @@ After the interview, produce a report with these sections:
 
 ## Step 4: Write docs
 
-### Doctier bootstrap (once per repo)
+### Doc store setup (once per repo)
 
-`.rubstack/` is tracked in git as age-encrypted blobs via doctier. If `.doctier.yml` exists at the repo root, skip this — the repo is already set up. If `.rubstack/` already exists but is gitignored (a pre-doctier project), follow the adoption recipe in the migrate-docs skill's REFERENCE.md instead. Otherwise, run the bootstrap in [../_shared/doctier-bootstrap.md](../_shared/doctier-bootstrap.md).
+Run "Setup" in [../_shared/doc-store.md](../_shared/doc-store.md): private repos keep `.rubstack/` in plaintext, public repos encrypt it with doctier. Skip it if `.rubstack/` is already tracked. If the repo still has a harness `.harness/` store, or an untracked `.rubstack/`, run `/migrate-docs` first.
 
 ### Spawn the doc writer
 
@@ -68,10 +68,9 @@ Rules: all files go under `.rubstack/product/`; update existing rather than over
 
 The subagent writes: `product.md`, `roadmap.md`, `competitors.md`, `ux.md` (if UI discussed), and `CONTEXT.md` (domain glossary). On a project that already has product docs, update in place and merge overlapping files rather than adding new ones. See [REFERENCE.md](REFERENCE.md) for templates.
 
-After the subagent finishes, confirm every file written. Refresh the doc index and commit — worktrees and future sessions only see committed `.rubstack/` content:
+After the subagent finishes, confirm every file written. Refresh the doc index ([../_shared/doc-store.md](../_shared/doc-store.md#refresh-the-doc-index-in-agentsmd)) and commit — worktrees and future sessions only see committed `.rubstack/` content:
 
 ```bash
-doctier agents --write
 git add .rubstack AGENTS.md && git commit -m "docs: product plan"
 ```
 

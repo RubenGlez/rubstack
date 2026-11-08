@@ -39,7 +39,7 @@ Prefer the lowest unfinished step in the rubstack workflow:
 - A risky or contested change is about to ship and nobody has tried to break it -> `/interrogate`
 - A branch or PR needs review against the repo's conventions and its feature spec -> `/review-diff`
 - Existing docs are scattered or outside rubstack structure -> `/migrate-docs`
-- `.rubstack/` exists but isn't git-tracked (gitignored, or `git ls-files .rubstack` is empty) -> `/migrate-docs` to adopt doctier encrypted tracking
+- `.harness/` exists, or `.rubstack/` exists but isn't git-tracked, or a private repo still has `.doctier.yml` -> `/migrate-docs` to bring the doc store to the rubstack convention
 - Context is fragmented and a fresh agent would struggle -> `/handoff`
 - You need a broader map of the area before changing code -> `/zoom-out`
 - Stable codebase with architectural friction — tight coupling, shallow modules, hard-to-test seams -> `/improve-codebase-architecture`

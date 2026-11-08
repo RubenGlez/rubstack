@@ -69,10 +69,9 @@ Rules: all internal files go under `.rubstack/`; update existing rather than ove
 
 See [REFERENCE.md](REFERENCE.md) for the exact template each subagent uses.
 
-After all subagents finish, confirm every file written with a one-line summary. Refresh the doc index and commit — worktrees and future sessions only see committed `.rubstack/` content:
+After all subagents finish, confirm every file written with a one-line summary. Refresh the doc index ([../_shared/doc-store.md](../_shared/doc-store.md#refresh-the-doc-index-in-agentsmd)) and commit — worktrees and future sessions only see committed `.rubstack/` content:
 
 ```bash
-doctier agents --write
 git add .rubstack AGENTS.md
 [ -f DESIGN.md ] && git add DESIGN.md
 git commit -m "docs: engineering plan and feature specs"

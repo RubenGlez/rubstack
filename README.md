@@ -20,14 +20,14 @@ Skills are invoked by name, like `/implement`. Use `/rubstack:implement` only if
 
 Two things need setting up once on your personal cloud environment (claude.ai/code → environment menu → Edit):
 
-**Encrypted docs.** Cloud containers have no SSH key, so give rubstack a dedicated one:
+**Encrypted docs (public repos only).** Private repos keep `.rubstack/` in plaintext and need nothing here. For public repos, whose docs are encrypted, cloud containers have no SSH key, so give rubstack a dedicated one:
 
 ```bash
 # On your machine
 ssh-keygen -t ed25519 -N "" -f ~/.ssh/rubstack_cloud -C rubstack-cloud
 base64 < ~/.ssh/rubstack_cloud | tr -d '\n'        # value for RUBSTACK_DOCTIER_KEY
 
-# In every project the cloud may read
+# In every public project the cloud may read
 doctier grant "$(cat ~/.ssh/rubstack_cloud.pub)" && git commit -am "chore: grant rubstack cloud key" && git push
 ```
 
@@ -105,9 +105,14 @@ If you are unsure which skill comes next, run `/next-step` first. It inspects th
 
 Once a product is shipped, most work is small: a bug report, a tweak, a customer request. Run `/task` for these — it makes the change as one verified slice and syncs the affected feature spec on the way out, so `.rubstack/` docs stay accurate between phases without re-running the planning skills. If the request turns out to be bigger than it looked, `/task` escalates to `/evolve` instead of proceeding.
 
-### Private docs: `.rubstack/` and doctier
+### Internal docs: `.rubstack/`
 
-Every workflow skill stores internal docs (product vision, specs, ADRs, QA reports) under `.rubstack/`, tracked in git as [doctier](https://github.com/RubenGlez/doctier)-encrypted blobs — private in public repos, but still backed up, merged, and visible in every worktree. The entry skills (`/ideate`, `/product-plan`, `/migrate-docs`) scaffold `.doctier.yml` on first use and grant your SSH key. A fresh clone on your machine sees ciphertext until you run `doctier init` once and then `doctier unlock`; cloud sessions do this for you (see [Cloud sessions](#cloud-sessions)).
+Every workflow skill stores internal docs (product vision, competitor research, specs, ADRs, QA reports) under `.rubstack/`, tracked in git so they are backed up, merged, and visible in every worktree. Storage follows the repo's visibility ([`skills/_shared/doc-store.md`](skills/_shared/doc-store.md)):
+
+- **Private repos:** plain files. No doctier, nothing to set up, works the same locally and in the cloud.
+- **Public repos:** encrypted with [doctier](https://github.com/RubenGlez/doctier), so strategy and competitor research never leak. The entry skills (`/ideate`, `/product-plan`, `/migrate-docs`) set it up on first use and grant your SSH key. A fresh clone sees ciphertext until you run `doctier init` once and then `doctier unlock`; cloud sessions do this for you (see [Cloud sessions](#cloud-sessions)).
+
+Before making a private repo public, remove `.rubstack/` from its history or publish a fresh repo: past commits hold the docs in plaintext.
 
 ### Utilities
 
@@ -134,17 +139,18 @@ These can be used at any point in the workflow.
 | Rules | `rules/rules.md` | Engineering and git rules, injected into every session by the SessionStart hook |
 | Guard hooks | `scripts/hooks/block-dangerous-git.sh`, `block-prototype-commit.sh` | Block irreversible git commands and commits of prototype/spike code |
 | Design lint | `scripts/hooks/lint-design.sh` | Lints `DESIGN.md` after each edit |
-| Session start | `scripts/hooks/session-start.sh` | Rules, cloud doctier unlock, and workflow status |
+| Session start | `scripts/hooks/session-start.sh` | Rules, cloud doctier unlock (public repos), and workflow status |
 
 ## Migrating from harness
 
 1. Remove harness: `bash uninstall.sh` in your harness clone (it also removes the harness rules block from `~/.claude/CLAUDE.md`, which rubstack now injects itself).
 2. Install rubstack as above.
-3. In each project, run `/migrate-docs`: it moves `.harness/` to `.rubstack/` and keeps the docs encrypted.
+3. In each project, run `/migrate-docs`: it moves `.harness/` to `.rubstack/`, drops doctier in private repos (plain files from then on) and keeps the docs encrypted in public ones. Fleet mode does every repo in one sweep.
 
 ## Status
 
-`/metrics` still keeps its state in `~/.rubstack/metrics/` and has no schedule yet; moving it to a weekly cloud Routine is the next planned change.
+- `/metrics` still keeps its state in `~/.rubstack/metrics/` and has no schedule yet; it will move to a weekly cloud Routine.
+- Existing projects still use the harness layout; they will be migrated with `/migrate-docs` fleet mode.
 
 ## Acknowledgements
 

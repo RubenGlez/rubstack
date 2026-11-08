@@ -72,7 +72,7 @@ Include durable, agent-facing project facts that are not reliably inferable from
 
 **Never include:** commands from package.json, architecture descriptions, file structure, or links to `.rubstack/` files. AGENTS.md is a public committed file — hand-written references to private content don't belong there.
 
-**Exception:** the block between `<!-- doctier:begin -->` and `<!-- doctier:end -->` is machine-managed by `doctier agents --write` — preserve it verbatim, never hand-edit or delete it. (Its `.rubstack/` paths are valid in every clone; the files exist as encrypted blobs.)
+**Exception:** the doc-index block (`<!-- doctier:begin -->`…`<!-- doctier:end -->` in encrypted mode, `<!-- rubstack:docs:begin -->`…`<!-- rubstack:docs:end -->` in plain mode) is managed by the doc-index refresh — preserve it verbatim, never hand-edit or delete it. (Its `.rubstack/` paths are valid in every clone; the files exist as encrypted blobs.)
 
 If nothing qualifies, leave AGENTS.md empty or with a single blank line. Keep it concise, but do not remove useful context just because the file is no longer nearly empty.
 
