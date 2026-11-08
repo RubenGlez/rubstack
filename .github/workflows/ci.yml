@@ -15,4 +15,4 @@ jobs:
         run: bash tests/smoke.sh
 
       - name: ShellCheck
-        run: shellcheck -S warning scripts/hooks/*.sh skills/metrics/scripts/*.sh tests/smoke.sh
+        run: shellcheck -S warning scripts/hooks/*.sh skills/metrics/scripts/*.sh migration/*.sh tests/smoke.sh
