@@ -11,7 +11,7 @@ This is a standalone skill. It never ends with "run the next workflow skill"; it
 
 ## Operating contract
 
-- **Read-only.** Never write to an analyzed repo, never open issues, never commit. All state lives in `~/.rubstack/metrics/`.
+- **Read-only.** Never write to an analyzed repo and never open issues. The only thing this skill commits is its own state, on the `metrics-data` branch of the rubstack repo (see Step 1).
 - **Judge each product against its own declared intent**, from its `.rubstack/product/product.md`, and against its own history. Never rank products against each other on a normalized traction score.
 - **Ownership is verified, never assumed.** A package matching a repo name may belong to someone else.
 - **A missing credential is "unknown", never "zero".** Every gap is reported with its reason.
@@ -19,17 +19,26 @@ This is a standalone skill. It never ends with "run the next workflow skill"; it
 
 ## Step 1: Collect
 
-Run the collector. It is stdlib-only python3 and needs no install step:
+**State** lives on the `metrics-data` branch of `RubenGlez/rubstack`, checked out at `$RUBSTACK_METRICS_HOME` (default `~/.rubstack/metrics/`): `config.json` (product mapping and frozen GEO queries), `snapshots/YYYY-MM-DD.json`, `recommendations.json`. Keeping it in git is what lets the weekly cloud Routine and your local runs share one history. In a cloud session, attach the repo first (`add_repo`, see [../_shared/github-access.md](../_shared/github-access.md)).
+
+**Every run** collects through the weekly script, which pulls the branch, runs the stdlib-only collector, and commits and pushes the snapshot:
 
 ```bash
-python3 <skill>/scripts/collect.py --init      # first run only, writes config skeleton
-python3 <skill>/scripts/collect.py --backfill  # first run only, pulls npm and star history
-python3 <skill>/scripts/collect.py             # every run after that
+bash <skill>/scripts/weekly.sh
 ```
 
-State lives in `~/.rubstack/metrics/`: `config.json` (product mapping and frozen GEO queries), `snapshots/YYYY-MM-DD.json`, `recommendations.json`.
+A cloud Routine runs the same script every Monday. Without an authenticated `gh` (any cloud run), GitHub sources are recorded as gaps; only a local run fills in stars, releases and traffic. GitHub keeps traffic for 14 days, so tell the user when the last snapshot with traffic is more than 10 days old.
 
-Read the snapshot. Do not re-fetch anything the collector already gathered.
+**First run only**, on the user's machine (`--init` needs `gh` to discover repos): clone the branch to `$RUBSTACK_METRICS_HOME`, then
+
+```bash
+RUBSTACK_METRICS_HOME=~/.rubstack/metrics python3 <skill>/scripts/collect.py --init      # config skeleton
+RUBSTACK_METRICS_HOME=~/.rubstack/metrics python3 <skill>/scripts/collect.py --backfill  # npm and star history
+```
+
+and commit and push the result to `metrics-data`.
+
+Read the snapshot. Do not re-fetch anything the collector already gathered. Whatever this run changes in `config.json` or `recommendations.json`, commit and push to `metrics-data` before reporting.
 
 ## Step 2: Close the config gaps
 

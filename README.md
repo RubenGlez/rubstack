@@ -147,9 +147,14 @@ These can be used at any point in the workflow.
 2. Install rubstack as above.
 3. In each project, run `/migrate-docs`: it moves `.harness/` to `.rubstack/`, drops doctier in private repos (plain files from then on) and keeps the docs encrypted in public ones. Fleet mode does every repo in one sweep.
 
+## Metrics
+
+`/metrics` keeps its state (config, weekly snapshots, open bets) on the `metrics-data` branch of this repo, so local runs and the cloud share one history. A cloud Routine runs `skills/metrics/scripts/weekly.sh` every Monday; it has no GitHub access, so stars, releases and traffic only come from local runs. GitHub keeps traffic for 14 days: run `/metrics` (or the script) locally at least every two weeks to keep that series whole.
+
+The Routine uses its own cloud environment, which allows the hosts the collector calls (npm, App Store, Play Store, the MCP registry, skills.sh, Cloudflare and your sites).
+
 ## Status
 
-- `/metrics` still keeps its state in `~/.rubstack/metrics/` and has no schedule yet; it will move to a weekly cloud Routine.
 - Existing projects still use the harness layout; they will be migrated with `/migrate-docs` fleet mode.
 
 ## Acknowledgements
