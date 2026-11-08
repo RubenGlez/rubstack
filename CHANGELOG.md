@@ -6,7 +6,7 @@ First version, derived from the [harness](https://github.com/RubenGlez/harness) 
 
 - Claude Code only: Codex and OpenCode support, the installer/updater scripts, and the status line are gone. The plugin is installed through the claude.ai account.
 - Project docs move from `.harness/` to `.rubstack/`; `/migrate-docs` moves existing projects.
-- Global rules are injected by the SessionStart hook instead of being written to `~/.claude/CLAUDE.md`.
+- No global rules file: harness's `rules.md` is split into the skills that apply each rule (`_shared/git-workflow.md`, `_shared/writing.md`, `/task`, `/implement`, `/dev-plan`, `/qa`). Rules no skill applies are dropped.
 - doctier is for public repos only: private repos keep `.rubstack/` as plain files, with no setup, and `/migrate-docs` drops doctier from private repos that still use it.
 - Cloud sessions can read encrypted docs in public repos: the SessionStart hook installs doctier and unlocks `.rubstack/` with a dedicated key from `RUBSTACK_DOCTIER_KEY`.
 - Skills that used `gh` fall back to GitHub MCP tools when `gh` is not authenticated.

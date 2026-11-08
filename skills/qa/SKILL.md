@@ -61,6 +61,10 @@ Criteria are phrased Given/When/Then: reproduce the *Given* as setup state, perf
 - Verify behavior through the UI, not by inspecting internal state or database records directly
 - Check edge cases from the feature spec (empty states, error states, validation messages)
 
+**Mobile app — use Argent MCP:**
+- Run the app on an iOS simulator or Android emulator
+- Walk through the user flow and verify behavior through the UI, as for the web
+
 **CLI — use shell:**
 - Run commands with the inputs described in the spec
 - Verify stdout/stderr matches expected output for both happy path and error paths
@@ -80,6 +84,8 @@ For each criterion: record ✅ pass or ❌ fail with a one-line note on what was
 **Adversarial pass for risky features.** Acceptance criteria only cover the paths someone thought of. For features that touch auth, payments, data migration, concurrency or external contracts, or that the user flags as contested, run [/interrogate](../interrogate/SKILL.md) scoped to that feature's commits. Each verified finding becomes a ❌ failure for Step 5; skip this for everything else.
 
 ## Step 5: Fix simple failures
+
+When the same kind of failure shows up a second time, prefer a test, lint or type that prevents it over a note in the report ([encode-lessons-in-structure](../_shared/principles/encode-lessons-in-structure.md)).
 
 For each ❌ failure:
 

@@ -124,6 +124,8 @@ The test: keep in SKILL.md what every run needs; move behind a link what only so
 
 ## Rubstack Conventions
 
+**Structure over text** — before adding an instruction a skill already gives elsewhere, or one that keeps being ignored, make it a hook, test or lint instead ([encode-lessons-in-structure](../_shared/principles/encode-lessons-in-structure.md)).
+
 **Workflow vs. standalone** — decide before drafting:
 - *Workflow skill*: fits in the ideate → ship chain. End with a recommended next step (e.g. "Run /qa to verify."). The user invokes it at a specific phase.
 - *Standalone skill*: callable at any time, independent of phase (e.g. `/improve-codebase-architecture`, `/task`). Don't recommend a "next step" — just report what was done.
@@ -135,7 +137,7 @@ The test: keep in SKILL.md what every run needs; move behind a link what only so
 - `.rubstack/adr/` — architectural decision records
 - `.rubstack/qa/report.md` — QA output
 
-**Subagents** — when spawning subagents, pass file *paths*, not file contents. Subagents have full repo access. Only pass content directly for small, critical excerpts (e.g. the full text of a feature spec the agent must implement).
+**Subagents** — delegate bulk reads and large outputs to a subagent and keep only its summary ([guard-the-context-window](../_shared/principles/guard-the-context-window.md)). When spawning subagents, pass file *paths*, not file contents. Subagents have full repo access. Only pass content directly for small, critical excerpts (e.g. the full text of a feature spec the agent must implement).
 
 **Cross-skill references** — link to other skills' docs with relative paths (e.g. `../dev-plan/REFERENCE.md`).
 

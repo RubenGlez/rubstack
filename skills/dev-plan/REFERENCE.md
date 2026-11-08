@@ -8,17 +8,17 @@
 - What are the system boundaries — in scope vs. delegated to external services?
 
 ### 2. Tech stack
-- What language(s) and runtime? Why — performance, ecosystem, team familiarity, product constraints?
+- What language(s) and runtime? Why — performance, ecosystem, team familiarity, product constraints? Defaults unless the product needs otherwise: Node.js on the current LTS, pnpm as the package manager.
 - What framework, if any? Does the product's scale and complexity warrant one?
 - What storage layer? Relational, document, key-value, file-based, or none?
 
 ### 3. Key libraries and tools
-- For each major product feature in the roadmap, what specific library or tool handles it?
+- For each major product feature in the roadmap, what specific library or tool handles it? Pick its latest stable version, and check current docs with Context7 if available.
 - What's the testing approach — unit, integration, e2e? What framework?
 - What build, bundling, or deployment tooling is needed?
 
 ### 4. Data model
-- What are the core entities and their relationships?
+- What are the core entities and their relationships? Encode business rules in structures (enums, state machines, tables, typed models), not scattered conditionals ([model-the-domain](../_shared/principles/model-the-domain.md)).
 - What operations need to be fast? What can be slow?
 - What's the expected data volume and growth trajectory?
 

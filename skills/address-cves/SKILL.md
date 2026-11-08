@@ -124,6 +124,8 @@ Validation passes only when high/critical findings are fixed and no new regressi
 
 ## Step 6: Commit, Push, Merge, Clean Up
 
+Commits follow [../_shared/git-workflow.md](../_shared/git-workflow.md) (no `Co-Authored-By`). Invoking this skill is the user's explicit request to merge validated fixes into the default branch and push it; that exception covers nothing else.
+
 When validation passes:
 
 1. Commit with `fix: address high and critical CVEs`.

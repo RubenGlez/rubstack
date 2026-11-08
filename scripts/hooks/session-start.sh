@@ -1,27 +1,17 @@
 #!/usr/bin/env bash
-# SessionStart: everything rubstack needs at the top of a session, local or cloud.
-#   1. Global rules → stdout, which Claude Code adds to the session context.
-#      (A plugin can't write ~/.claude/CLAUDE.md, and cloud sessions never see it.)
-#   2. Cloud doc access: if RUBSTACK_DOCTIER_KEY is set, install doctier when
-#      missing, write the key, and decrypt .rubstack/ in the project.
-#   3. Workflow status for the project.
+# SessionStart: what rubstack needs at the top of a session, local or cloud.
+#   1. Cloud doc access: if RUBSTACK_DOCTIER_KEY is set and the project uses
+#      doctier (public repos), install doctier when missing, write the key,
+#      and decrypt .rubstack/.
+#   2. Workflow status for the project.
 # Never blocks a session: every failure is reported and the hook exits 0.
 
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 
-# ── 1. Rules ───────────────────────────────────────────────────────────────────
-
-if [ -f "$PLUGIN_ROOT/rules/rules.md" ]; then
-  echo "<rubstack-rules>"
-  cat "$PLUGIN_ROOT/rules/rules.md"
-  echo "</rubstack-rules>"
-  echo ""
-fi
-
 cd "$PROJECT_DIR" 2>/dev/null || exit 0
 
-# ── 2. Doctier with a dedicated key (cloud sessions) ───────────────────────────
+# ── 1. Doctier with a dedicated key (cloud sessions, public repos) ───────────────────────────
 #
 # RUBSTACK_DOCTIER_KEY holds a passphrase-less ed25519 private key, base64
 # encoded, that was granted with `doctier grant` in the repos it may read.
@@ -79,7 +69,7 @@ setup_doctier() {
 
 setup_doctier
 
-# ── 3. Status ──────────────────────────────────────────────────────────────────
+# ── 2. Status ──────────────────────────────────────────────────────────────────
 
 bash "$PLUGIN_ROOT/scripts/hooks/rubstack-status.sh"
 exit 0

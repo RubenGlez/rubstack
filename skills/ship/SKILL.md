@@ -48,7 +48,7 @@ After approval:
 
 1. Bump the version in the manifest (`package.json`, `pyproject.toml`, `Cargo.toml`, ...).
 2. If `CHANGELOG.md` exists, prepend the entry (see [REFERENCE.md](REFERENCE.md) for format). If it doesn't exist, put the release notes in the tag message instead — don't create new doc files unasked.
-3. Commit the bump, create an annotated tag `v[X.Y.Z]`, and push branch + tag.
+3. Commit the bump, create an annotated tag `v[X.Y.Z]`, and push branch + tag ([../_shared/git-workflow.md](../_shared/git-workflow.md) for the commit rules). Write the changelog and any announcement per [../_shared/writing.md](../_shared/writing.md).
 
 ## Step 5: Deploy and verify
 

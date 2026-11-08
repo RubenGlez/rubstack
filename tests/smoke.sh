@@ -102,8 +102,8 @@ PY
 # Claude Code only, and the doc store is .rubstack/. .harness may only appear
 # in the migration itself or in lines that send the user to /migrate-docs.
 t_no_stale_refs() {
-  ! grep -rniE 'codex|opencode|runtime-parallelism|update\.sh|setup\.sh' "$ROOT/skills" "$ROOT/rules" "$ROOT/scripts" \
-  && ! grep -rn '\.harness' "$ROOT/skills" "$ROOT/rules" "$ROOT/scripts" \
+  ! grep -rniE 'codex|opencode|runtime-parallelism|update\.sh|setup\.sh' "$ROOT/skills" "$ROOT/scripts" \
+  && ! grep -rn '\.harness' "$ROOT/skills" "$ROOT/scripts" \
        | grep -v -e 'skills/migrate-docs/' -e 'migrate-docs' -e 'scripts/hooks/rubstack-status.sh'
 }
 
@@ -171,7 +171,8 @@ new_project() {
 }
 FAKE_KEY=$(printf -- '-----BEGIN OPENSSH PRIVATE KEY-----\nabc\n-----END OPENSSH PRIVATE KEY-----\n' | base64 | tr -d '\n')
 
-t_prints_rules()  { local out; out=$(run_session_start "$(tmpdir)"); grep -q "<rubstack-rules>" <<<"$out"; }
+# Rules live in the skills that apply them; nothing global is injected.
+t_no_global_rules() { [ ! -e "$ROOT/rules" ] && local out && out=$(run_session_start "$(tmpdir)") && [ -z "$out" ]; }
 t_no_key_no_doctier() {
   rm -f "$FAKE_HOME/doctier.log"; local p; p=$(new_project)
   run_session_start "$p" >/dev/null; [ ! -f "$FAKE_HOME/doctier.log" ]
@@ -194,7 +195,7 @@ t_legacy_layout() {
 }
 t_always_exit_0() { run_session_start /nonexistent >/dev/null; }
 
-check "Prints the global rules"                         t_prints_rules
+check "Injects no global rules (empty output outside a project)" t_no_global_rules
 check "Without RUBSTACK_DOCTIER_KEY, doctier is untouched" t_no_key_no_doctier
 check "With the key, writes it 0600 and unlocks .rubstack/" t_key_unlocks
 check "Reports a malformed key"                          t_bad_key_reported
