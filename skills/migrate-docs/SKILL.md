@@ -1,26 +1,32 @@
 ---
 name: migrate-docs
-description: Discover all documentation in the repo, classify each file, transform content to match rubstack templates, and migrate everything to the correct location. Also moves a harness `.harness/` doc store to `.rubstack/`, and adopts doctier encrypted tracking on pre-doctier projects. Use on any existing project to adopt the rubstack workflow without starting from scratch.
+description: Discover all documentation in the repo, classify each file, transform content to match rubstack templates, and migrate everything to the correct location. Also moves a harness `.harness/` doc store to `.rubstack/` and aligns storage with visibility: plaintext in private repos, doctier encryption only in public ones. Use on any existing project to adopt the rubstack workflow without starting from scratch.
 ---
 
 # Migrate Docs
 
 **Precondition: a clean working tree.** The migration ends in a commit of everything it changed; unrelated uncommitted changes would be swept into that commit. If `git status --porcelain` is not empty, stop and ask the user to commit or stash first.
 
-## Step 0: Legacy layouts (harness `.harness/`, pre-doctier `.rubstack/`)
+## Step 0: Bring the doc store to the rubstack convention
 
-Before discovering anything, check whether this repo already holds workflow docs in a legacy layout:
+Before discovering anything, check where the docs live and whether their storage matches the repo's visibility ([../_shared/doc-store.md](../_shared/doc-store.md): plaintext in private repos, doctier only in public ones). Find the visibility as that file describes, then:
 
 ```bash
-if [ -d .harness ]; then echo legacy-harness
-elif [ -d .rubstack ] && { [ ! -f .doctier.yml ] || [ -z "$(git ls-files .rubstack)" ]; }; then echo pre-doctier
+if [ -d .harness ]; then echo harness-store
+elif [ -d .rubstack ] && [ -z "$(git ls-files .rubstack)" ]; then echo untracked-store
+elif [ -f .doctier.yml ]; then echo doctier-store
 fi
 ```
 
-- `legacy-harness` — the repo was set up with the harness plugin, whose doc store was `.harness/`. Follow "Migrating a harness `.harness/` store to `.rubstack/`" in [REFERENCE.md](REFERENCE.md). It moves the store and keeps it encrypted; the docs' content is already in the right shape.
-- `pre-doctier` — `.rubstack/` exists but isn't tracked in git. Follow "Adopting doctier on a repo with an existing (gitignored) `.rubstack/`" in [REFERENCE.md](REFERENCE.md): it runs the doctier bootstrap (Step 4 below), removes the legacy gitignore line, and commits the docs encrypted.
+| State | Private repo | Public repo |
+|---|---|---|
+| `harness-store` — set up with the harness plugin | "Moving a harness `.harness/` store" in [REFERENCE.md](REFERENCE.md), private branch: move it and drop doctier | Same recipe, public branch: move it and keep it encrypted |
+| `untracked-store` — `.rubstack/` exists but isn't in git | "Tracking an untracked `.rubstack/` in a private repo" | "Adopting doctier on a public repo with an untracked `.rubstack/`" |
+| `doctier-store` | "Dropping doctier from a private repo" | Already correct; nothing to do |
 
-After either recipe, continue with Step 1 only if the repo also has scattered docs outside `.rubstack/` to migrate. If not, report what changed — files now tracked (`git ls-files .rubstack`), ciphertext verified (`git show :.rubstack/<file> | head -1`), commit hash — and stop; the migration is complete.
+Any change to `.doctier.yml`, `.doctier/recipients.txt` or `.gitattributes` is security-relevant: say so to the user when the recipe touches them.
+
+After the recipe, continue with Step 1 only if the repo also has scattered docs outside `.rubstack/` to migrate. If not, report what changed — files tracked (`git ls-files .rubstack`), their storage verified (`git show :.rubstack/<file> | head -1` is prose in a private repo, an age envelope in a public one), commit hash — and stop; the migration is complete.
 
 ## Step 1: Discover
 
@@ -108,9 +114,9 @@ Wait for explicit confirmation. Do not write any files until the user approves.
 
 ## Step 4: Migrate — spawn parallel subagents
 
-### Doctier bootstrap (once per repo)
+### Doc store setup (once per repo)
 
-`.rubstack/` is tracked in git as age-encrypted blobs via doctier. If `.doctier.yml` exists at the repo root, skip this — the repo is already set up (a pre-doctier `.rubstack/` was already handled in Step 0). Otherwise, run the bootstrap in [../_shared/doctier-bootstrap.md](../_shared/doctier-bootstrap.md).
+Run "Setup" in [../_shared/doc-store.md](../_shared/doc-store.md) unless `.rubstack/` is already tracked (Step 0 handled legacy layouts): plain mode for private repos, doctier encryption for public ones.
 
 ### Spawn the migration subagents
 
@@ -139,10 +145,9 @@ Scan every public doc for references to paths that no longer exist. For each: if
 
 ## Step 8: Commit and report
 
-Refresh the doc index and commit the migration in one commit — the migrated `.rubstack/` docs together with the cleaned public files (worktrees and future sessions only see committed `.rubstack/` content):
+Refresh the doc index ([../_shared/doc-store.md](../_shared/doc-store.md#refresh-the-doc-index-in-agentsmd)) and commit the migration in one commit — the migrated `.rubstack/` docs together with the cleaned public files (worktrees and future sessions only see committed `.rubstack/` content):
 
 ```bash
-doctier agents --write
 git add -A && git commit -m "docs: migrate documentation to rubstack layout"
 ```
 
@@ -173,9 +178,6 @@ When asked to migrate many repos (or "all my repos"), run the sweep as a structu
 1. **Enumerate** — `gh repo list --limit 200 --json name,isPrivate,isArchived,url` (in a cloud session, `list_repos` and `add_repo`; see [../_shared/github-access.md](../_shared/github-access.md)). Drop archived repos, apply the visibility filter the user asked for, and add any repos they named explicitly.
 2. **Ask the scope questions once**, up front, for the whole fleet: adoption-only vs full doc migration, commit-only vs push, and which edge-case repos to include or skip. Do not re-ask per repo.
 3. **Locate or clone** each repo locally. `git pull --ff-only` any that are behind; a repo with a dirty working tree pauses that repo (see the precondition), not the fleet.
-4. **Classify each repo by state**:
-   - `.rubstack/` exists but untracked → Step 0 adoption. No per-repo plan confirmation needed — adoption moves storage, not content.
-   - No `.rubstack/`, docs scattered or absent → full Steps 1–8; the Step 3 plan confirmation still applies per repo (batch the plans into one message where practical).
-   - Already on doctier → skip, report as such.
-5. **Prove the flow on one repo first** (adopt, commit, push, verify remote ciphertext), then batch the rest with the same recipe. Verify every repo independently: encryption gate on staged blobs, `doctier check`, and remote ciphertext after push — never assume a repeat run worked because the first one did.
-6. **Report one summary table**: repo, action taken, encrypted-file count, sync state, and anything skipped with the reason.
+4. **Classify each repo** by visibility and Step 0 state. Store-only changes (`harness-store`, `untracked-store`, a private `doctier-store`) need no per-repo plan confirmation — they move storage, not content. Repos with no `.rubstack/` and scattered or absent docs get full Steps 1–8, and the Step 3 plan confirmation still applies per repo (batch the plans into one message where practical). A public repo already on doctier and on `.rubstack/` is skipped and reported as such.
+5. **Prove the flow on one repo of each kind first** (private and public: migrate, commit, push, verify the stored blobs on the remote), then batch the rest with the same recipe. Verify every repo independently — prose in private repos, ciphertext plus `doctier check` in public ones — never assume a repeat run worked because the first one did.
+6. **Report one summary table**: repo, visibility, action taken, storage (plain/encrypted) and file count, sync state, and anything skipped with the reason.

@@ -1,6 +1,6 @@
 # Doctier bootstrap
 
-The canonical once-per-repo setup for tracking `.rubstack/` as age-encrypted blobs. Shared by `/ideate`, `/product-plan`, and `/migrate-docs` — the calling skill decides *when* to run it (and when to skip); this file is the *how*. Run every step in order.
+Encrypted mode only: the once-per-repo setup for tracking `.rubstack/` as age-encrypted blobs in a **public** repository. Private repositories never use doctier — see [doc-store.md](doc-store.md), which decides the mode and sends you here. Run every step in order.
 
 1. Check the binary: `command -v doctier`. In a cloud session the SessionStart hook installs it when `RUBSTACK_DOCTIER_KEY` is set; if it is still missing there, tell the user to add the install line to the cloud environment's setup script. Otherwise, if missing, STOP and tell the user: "rubstack doc skills require doctier. Install it with `brew tap RubenGlez/doctier https://github.com/RubenGlez/doctier && brew install doctier`, or without Homebrew: `curl -fsSL https://raw.githubusercontent.com/RubenGlez/doctier/main/install.sh | sh`. Then re-run this skill." Do not write `.rubstack/` docs without it.
 2. Write `.doctier.yml` at the repo root (if the rules change later, re-run `doctier init` — it syncs the managed `.gitattributes`/`.gitignore` blocks):

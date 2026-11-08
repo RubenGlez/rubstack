@@ -59,7 +59,7 @@ See [REFERENCE.md](REFERENCE.md) for the detailed rules and content guidelines f
 
 ## Step 3: Refresh the doc index and commit
 
-After both subagents finish, run `doctier agents --write` to refresh the managed doc index in AGENTS.md (the block between `<!-- doctier:begin -->` and `<!-- doctier:end -->`). Then commit everything — worktrees and future sessions only see committed `.rubstack/` content:
+After both subagents finish, refresh the doc index in AGENTS.md ([../_shared/doc-store.md](../_shared/doc-store.md#refresh-the-doc-index-in-agentsmd)). Then commit everything — worktrees and future sessions only see committed `.rubstack/` content:
 
 ```bash
 for f in .rubstack AGENTS.md README.md DESIGN.md CHANGELOG.md CLAUDE.md; do

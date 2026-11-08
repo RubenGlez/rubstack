@@ -99,17 +99,25 @@ if bad:
 PY
 }
 
-# Claude Code only, and the doc store is .rubstack/. The only allowed .harness
-# mentions are the legacy-layout migration and its detection in the status hook.
+# Claude Code only, and the doc store is .rubstack/. .harness may only appear
+# in the migration itself or in lines that send the user to /migrate-docs.
 t_no_stale_refs() {
   ! grep -rniE 'codex|opencode|runtime-parallelism|update\.sh|setup\.sh' "$ROOT/skills" "$ROOT/rules" "$ROOT/scripts" \
   && ! grep -rn '\.harness' "$ROOT/skills" "$ROOT/rules" "$ROOT/scripts" \
-       | grep -v -e 'skills/migrate-docs/' -e 'scripts/hooks/rubstack-status.sh'
+       | grep -v -e 'skills/migrate-docs/' -e 'migrate-docs' -e 'scripts/hooks/rubstack-status.sh'
 }
 
 t_no_macos_only() { ! grep -rnE 'launchctl|launchd|pbcopy|osascript|/Library/' "$ROOT/skills" "$ROOT/scripts"; }
 
+# doctier is for public repos only: skills must reach it through doc-store.md,
+# never call it unconditionally.
+t_doctier_only_via_doc_store() {
+  ! grep -rln 'doctier agents --write\|doctier-bootstrap.md' "$ROOT/skills" \
+      | grep -v -e '_shared/doc-store.md' -e '_shared/doctier-bootstrap.md' -e 'migrate-docs/REFERENCE.md'
+}
+
 check "Every SKILL.md has name and description"        t_frontmatter
+check "Skills reach doctier only through doc-store.md" t_doctier_only_via_doc_store
 check "Workflow chain skills all exist"                t_workflow_chain
 check "Relative .md links in skills resolve"           t_relative_links_resolve
 check "No Codex/OpenCode/installer or stale .harness refs" t_no_stale_refs

@@ -9,7 +9,7 @@ A Claude Code plugin, distributed through a git marketplace (this repo) and inst
 - Hooks are bash + `jq` + `python3` only, and every hook exits 0 unless it is deliberately blocking a tool call.
 - Nothing macOS-only (launchd, `pbcopy`, `~/Library`); `tests/smoke.sh` enforces it.
 
-**Doc store.** Skills keep project docs in `.rubstack/`, tracked in git as doctier-encrypted blobs. In a cloud session the SessionStart hook decrypts them when `RUBSTACK_DOCTIER_KEY` (a dedicated, base64-encoded ed25519 key granted with `doctier grant`) is set on the environment. Projects still on the harness layout (`.harness/`) move with `/migrate-docs`.
+**Doc store.** Skills keep project docs in `.rubstack/`, always tracked in git. Private repos store them as plain files and never use doctier; public repos encrypt them with doctier. `skills/_shared/doc-store.md` is the single place that decides the mode, sets it up and refreshes the AGENTS.md doc index; skills must not call doctier directly (`tests/smoke.sh` enforces it). In a cloud session the SessionStart hook decrypts a public repo's docs when `RUBSTACK_DOCTIER_KEY` (a dedicated, base64-encoded ed25519 key granted with `doctier grant`) is set on the environment. Projects still on the harness layout (`.harness/`) move with `/migrate-docs`.
 
 **Single writer per `.rubstack/` file.** `/implement` subagents read `.rubstack/` but never write it; the orchestrator is the sole writer and commits doc changes before spawning worktrees and after merging.
 

@@ -50,9 +50,9 @@ Produce a verdict:
 
 ## Step 4: Write docs
 
-### Doctier bootstrap (once per repo)
+### Doc store setup (once per repo)
 
-`.rubstack/` is tracked in git as age-encrypted blobs via doctier. If `.doctier.yml` exists at the repo root, skip this — the repo is already set up. If `.rubstack/` already exists but is gitignored (a pre-doctier project), follow the adoption recipe in the migrate-docs skill's REFERENCE.md instead. Otherwise, run the bootstrap in [../_shared/doctier-bootstrap.md](../_shared/doctier-bootstrap.md).
+Run "Setup" in [../_shared/doc-store.md](../_shared/doc-store.md): private repos keep `.rubstack/` in plaintext, public repos encrypt it with doctier. Skip it if `.rubstack/` is already tracked. If the repo still has a harness `.harness/` store, or an untracked `.rubstack/`, run `/migrate-docs` first.
 
 ### Write `.rubstack/product/idea.md`
 
@@ -99,10 +99,9 @@ The specific gap that exists and why existing solutions don't fill it.
 - [URL] — what it contributed to the analysis
 ```
 
-After writing, refresh the doc index and commit — worktrees and future sessions only see committed `.rubstack/` content:
+After writing, refresh the doc index ([../_shared/doc-store.md](../_shared/doc-store.md#refresh-the-doc-index-in-agentsmd)) and commit — worktrees and future sessions only see committed `.rubstack/` content:
 
 ```bash
-doctier agents --write
 git add .rubstack AGENTS.md && git commit -m "docs: capture idea research"
 ```
 
