@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """Deterministic metrics collector for the rubstack `metrics` skill.
 
-Writes one snapshot per run to ~/.rubstack/metrics/snapshots/YYYY-MM-DD.json.
+Reads ~/.rubstack/metrics/state/config.json and writes one snapshot per run to
+~/.rubstack/metrics/snapshots/YYYY-MM-DD.json. That directory is a local mirror
+of the skill's state artifact, laid out the way ArtifactData's out_dir writes
+it (<collection>/<doc_id>.json); the skill pulls and pushes it, not this script.
 Standard library only: the rubstack installer assumes bash + python3 with no
 package install step, so anything needing a signed JWT (App Store Connect,
 Play Developer API) or an OAuth dance (Search Console) is deliberately left
@@ -25,7 +28,7 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(os.environ.get("RUBSTACK_METRICS_HOME", Path.home() / ".rubstack" / "metrics"))
-CONFIG = ROOT / "config.json"
+CONFIG = ROOT / "state" / "config.json"
 SNAPSHOTS = ROOT / "snapshots"
 WORKSPACE = Path(os.environ.get("RUBSTACK_WORKSPACE", Path.home() / "workspace"))
 UA = "rubstack-metrics/1.0"

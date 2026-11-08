@@ -11,7 +11,7 @@ This is a standalone skill. It never ends with "run the next workflow skill"; it
 
 ## Operating contract
 
-- **Read-only.** Never write to an analyzed repo and never open issues. The only thing this skill commits is its own state, on the `metrics-data` branch of the rubstack repo (see Step 1).
+- **Read-only.** Never write to an analyzed repo and never open issues. The only thing this skill writes is its own state, in its state artifact (see Step 1).
 - **Judge each product against its own declared intent**, from its `.rubstack/product/product.md`, and against its own history. Never rank products against each other on a normalized traction score.
 - **Ownership is verified, never assumed.** A package matching a repo name may belong to someone else.
 - **A missing credential is "unknown", never "zero".** Every gap is reported with its reason.
@@ -19,26 +19,38 @@ This is a standalone skill. It never ends with "run the next workflow skill"; it
 
 ## Step 1: Collect
 
-**State** lives on the `metrics-data` branch of `RubenGlez/rubstack`, checked out at `$RUBSTACK_METRICS_HOME` (default `~/.rubstack/metrics/`): `config.json` (product mapping and frozen GEO queries), `snapshots/YYYY-MM-DD.json`, `recommendations.json`. Keeping it in git is what lets the weekly cloud Routine and your local runs share one history. In a cloud session, attach the repo first (`add_repo`, see [../_shared/github-access.md](../_shared/github-access.md)).
+**State** lives in the database of a private Artifact titled **rubstack metrics**, never in a git repo: rubstack is public, and the state names private repos, traffic, Search Console data and open bets. Find its URL from `RUBSTACK_METRICS_ARTIFACT` when set, otherwise with `Artifact` `action: "list"`, matching the title. Its page summarizes the stored state; its access rules let only editors read or write it, so sharing the page never exposes the data. Collections:
 
-**Every run** collects through the weekly script, which pulls the branch, runs the stdlib-only collector, and commits and pushes the snapshot:
+- `state`: documents `config` (product mapping, frozen GEO queries, `dashboard.url`) and `recommendations` (the bet ledger, schema in [REFERENCE.md](REFERENCE.md)).
+- `snapshots`: one document per run, `doc_id` = its `YYYY-MM-DD` date. Each must stay under 256 KiB.
 
-```bash
-bash <skill>/scripts/weekly.sh
-```
+The scripts work on a local mirror at `$RUBSTACK_METRICS_HOME` (default `~/.rubstack/metrics/`), laid out the way `ArtifactData`'s `out_dir` writes it: `state/config.json`, `state/recommendations.json`, `snapshots/<date>.json`. Move data between the two through files (`out_dir` on reads, `file_path` on writes), never inline: snapshots are tens of KB each.
 
-A cloud Routine runs the same script every Monday. Without an authenticated `gh` (any cloud run), GitHub sources are recorded as gaps; only a local run fills in stars, releases and traffic. GitHub keeps traffic for 14 days, so tell the user when the last snapshot with traffic is more than 10 days old.
+**Every run:**
 
-**First run only**, on the user's machine (`--init` needs `gh` to discover repos): clone the branch to `$RUBSTACK_METRICS_HOME`, then
+1. **Pull.** `ArtifactData` `list` of `state` and of `snapshots` (`query.limit: 1000`), both with `out_dir: $RUBSTACK_METRICS_HOME`. Keep the `version` of each `state` document for step 4.
+2. **Collect.**
+
+   ```bash
+   bash <skill>/scripts/weekly.sh
+   ```
+
+   It runs the stdlib-only collector against the mirror and prints the new snapshot's path on its last line.
+3. **Push the snapshot.** `ArtifactData` `set`, collection `snapshots`, `doc_id` the date, `file_path` the printed path.
+4. **Push the state** before reporting: whatever this run changes in `config` or `recommendations`, edit the mirror file and write it back with `set` and `file_path`, pinned with `if_version`. On a version conflict, pull again and redo the change.
+
+A cloud Routine runs the same three steps every Monday. Without an authenticated `gh` (any cloud run), GitHub sources are recorded as gaps; only a local run fills in stars, releases and traffic. GitHub keeps traffic for 14 days, so tell the user when the last snapshot with traffic is more than 10 days old.
+
+**First run only**, on the user's machine (`--init` needs `gh` to discover repos). If no artifact titled **rubstack metrics** exists, publish one: a small page that reads the store, with `capabilities` `{"db": {"rules": [{"path": "state", "read": "admin", "write": "admin"}, {"path": "snapshots", "read": "admin", "write": "admin"}]}}`. Then build the mirror. If `migration/from-harness.sh` already left state in it, use that. Otherwise:
 
 ```bash
 RUBSTACK_METRICS_HOME=~/.rubstack/metrics python3 <skill>/scripts/collect.py --init      # config skeleton
 RUBSTACK_METRICS_HOME=~/.rubstack/metrics python3 <skill>/scripts/collect.py --backfill  # npm and star history
 ```
 
-and commit and push the result to `metrics-data`.
+Upload all of it with `ArtifactData` `batch` (at most 50 writes and 1 MiB per batch, so split the snapshots).
 
-Read the snapshot. Do not re-fetch anything the collector already gathered. Whatever this run changes in `config.json` or `recommendations.json`, commit and push to `metrics-data` before reporting.
+Read the snapshot. Do not re-fetch anything the collector already gathered.
 
 ## Step 2: Close the config gaps
 

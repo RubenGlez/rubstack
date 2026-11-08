@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `/metrics` state moves from this repo's `metrics-data` branch, now deleted, to the database of a private Artifact titled "rubstack metrics", so rubstack can be public. The skill pulls it to `~/.rubstack/metrics` (`state/`, `snapshots/`) and pushes changes back with ArtifactData; `weekly.sh` only runs the collector, and `collect.py` reads `state/config.json`. The weekly Routine's prompt has to do the pull and push.
+
 ## 0.1.0 — 2026-11-08
 
 First version, derived from the [harness](https://github.com/RubenGlez/harness) plugin (v0.3.2) and reshaped to run the same way locally and in Claude Code cloud sessions.

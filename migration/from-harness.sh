@@ -3,7 +3,8 @@
 # Run it on your own machine (not in a cloud session). Every step checks
 # whether it is already done, so it is safe to re-run.
 #
-#   1. Metrics state: ~/.harness/metrics → metrics-data branch at ~/.rubstack/metrics, pushed.
+#   1. Metrics state: ~/.harness/metrics → the local mirror at ~/.rubstack/metrics
+#      (state/ + snapshots/). The next /metrics run uploads it to its state artifact.
 #   2. Uninstall harness (plugin, rules block in ~/.claude/CLAUDE.md, status line,
 #      Codex/OpenCode links, metrics launchd job) with harness's own uninstall.sh.
 #   3. Cloud key for public repos: creates ~/.ssh/rubstack_cloud if missing and
@@ -12,7 +13,6 @@
 # Usage: bash migration/from-harness.sh [--harness-dir PATH] [--no-cloud-key]
 set -euo pipefail
 
-REMOTE="https://github.com/RubenGlez/rubstack"
 OLD_METRICS="$HOME/.harness/metrics"
 NEW_METRICS="${RUBSTACK_METRICS_HOME:-$HOME/.rubstack/metrics}"
 HARNESS_DIR="$(cat "$HOME/.harness_dir" 2>/dev/null || true)"
@@ -31,21 +31,16 @@ step() { printf '\n== %s\n' "$1"; }
 # ── 1. Metrics state ───────────────────────────────────────────────────────────
 
 step "1. Metrics state"
-if [ ! -d "$NEW_METRICS/.git" ]; then
-  git clone -q --single-branch --branch metrics-data "$REMOTE" "$NEW_METRICS"
-  echo "cloned metrics-data → $NEW_METRICS"
-fi
-if [ -f "$NEW_METRICS/config.json" ]; then
-  echo "already on metrics-data: config.json present, nothing to import"
+if [ -f "$NEW_METRICS/state/config.json" ]; then
+  echo "already in $NEW_METRICS: state/config.json present, nothing to import"
 elif [ -f "$OLD_METRICS/config.json" ]; then
+  mkdir -p "$NEW_METRICS/state"
   for f in config.json recommendations.json; do
-    [ -f "$OLD_METRICS/$f" ] && cp "$OLD_METRICS/$f" "$NEW_METRICS/"
+    [ -f "$OLD_METRICS/$f" ] && cp "$OLD_METRICS/$f" "$NEW_METRICS/state/"
   done
   [ -d "$OLD_METRICS/snapshots" ] && cp -R "$OLD_METRICS/snapshots" "$NEW_METRICS/"
-  git -C "$NEW_METRICS" add -A
-  git -C "$NEW_METRICS" commit -q -m "metrics: import state from harness"
-  git -C "$NEW_METRICS" push -q origin metrics-data
-  echo "imported $(find "$NEW_METRICS/snapshots" -name '*.json' 2>/dev/null | wc -l | tr -d ' ') snapshots and pushed"
+  echo "copied $(find "$NEW_METRICS/snapshots" -name '*.json' 2>/dev/null | wc -l | tr -d ' ') snapshots to $NEW_METRICS"
+  echo "run /metrics once: it uploads them to its private state artifact"
 else
   echo "no harness metrics state at $OLD_METRICS; run /metrics once to create it"
 fi
