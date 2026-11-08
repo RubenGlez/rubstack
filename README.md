@@ -1,6 +1,6 @@
 # rubstack
 
-Rubén's software factory for Claude Code: a skill chain that takes a product from idea to shipped release, shared engineering rules, and guard hooks. The same plugin runs on your machine and in [Claude Code cloud sessions](https://code.claude.com/docs/en/claude-code-on-the-web).
+Rubén's software factory for Claude Code: a skill chain that takes a product from idea to shipped release, plus guard hooks. The same plugin runs on your machine and in [Claude Code cloud sessions](https://code.claude.com/docs/en/claude-code-on-the-web).
 
 rubstack started as a Claude Code–only rework of [harness](https://github.com/RubenGlez/harness).
 
@@ -136,14 +136,14 @@ These can be used at any point in the workflow.
 
 | Component | Where | Purpose |
 |---|---|---|
-| Rules | `rules/rules.md` | Engineering and git rules, injected into every session by the SessionStart hook |
+| Shared conventions | `skills/_shared/` | Git workflow, doc writing, GitHub access, doc store and engineering principles, linked from the skills that apply them |
 | Guard hooks | `scripts/hooks/block-dangerous-git.sh`, `block-prototype-commit.sh` | Block irreversible git commands and commits of prototype/spike code |
 | Design lint | `scripts/hooks/lint-design.sh` | Lints `DESIGN.md` after each edit |
-| Session start | `scripts/hooks/session-start.sh` | Rules, cloud doctier unlock (public repos), and workflow status |
+| Session start | `scripts/hooks/session-start.sh` | Cloud doctier unlock (public repos) and workflow status |
 
 ## Migrating from harness
 
-1. Remove harness: `bash uninstall.sh` in your harness clone (it also removes the harness rules block from `~/.claude/CLAUDE.md`, which rubstack now injects itself).
+1. Remove harness: `bash uninstall.sh` in your harness clone (it also removes the harness rules block from `~/.claude/CLAUDE.md`; rubstack has no global rules, each skill carries the conventions it needs).
 2. Install rubstack as above.
 3. In each project, run `/migrate-docs`: it moves `.harness/` to `.rubstack/`, drops doctier in private repos (plain files from then on) and keeps the docs encrypted in public ones. Fleet mode does every repo in one sweep.
 

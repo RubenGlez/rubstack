@@ -94,6 +94,8 @@ Implement blocking features first (sequentially), then run the remaining indepen
 
 ## Step 5: Merge
 
+Run the whole phase on a feature branch, never the default branch, and publish it as a PR per [../_shared/git-workflow.md](../_shared/git-workflow.md) once Step 7 is done.
+
 Subagents read `.rubstack/` in their worktrees but must never edit it — the specs are the orchestrator's contract (parallel spec writes merge byte-wise but conflict semantically). They report their results instead (see [REFERENCE.md](REFERENCE.md)); you are the only writer of `.rubstack/`.
 
 Slices are meant to be independent, but any two features that touched a shared seam (router, schema, `package.json`, config, DI wiring) will collide on merge. Merge one branch at a time so each conflict is attributable:

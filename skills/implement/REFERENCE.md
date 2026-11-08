@@ -26,6 +26,11 @@ Implement the feature described in the spec as a vertical slice:
 - Implement only what this specific feature needs at each layer
 - Do not implement shared infrastructure unless this feature requires it
 - Do not refactor existing code unless the feature cannot work without it
+- Touch only what the feature needs: match existing style, don't improve adjacent code,
+  comments or formatting, and remove only imports or code your own change left unused
+- No speculative abstractions, options or configurability the spec doesn't ask for
+- When adding a library, use its latest stable version and the repo's package manager
+  (pnpm for new JavaScript projects); check its current API with Context7 if available
 - Read any file before modifying it — other agents may be working in parallel
 - Before marking the feature done, run the project's static checks if they exist
   (typecheck, build, lint — e.g. tsc, npm run build, cargo check) and fix what your

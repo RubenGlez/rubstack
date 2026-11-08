@@ -55,7 +55,7 @@ Only update a file if the summary shows it's stale. Do not touch accurate files.
 
 Keep public docs strictly separated from internal content — no `.rubstack/` links, no internal strategy, no implementation details.
 
-See [REFERENCE.md](REFERENCE.md) for the detailed rules and content guidelines for each file.
+See [REFERENCE.md](REFERENCE.md) for the detailed rules and content guidelines for each file, and pass both subagents the path to [../_shared/writing.md](../_shared/writing.md): it holds the style and what-to-document rules.
 
 ## Step 3: Refresh the doc index and commit
 
@@ -65,7 +65,7 @@ After both subagents finish, refresh the doc index in AGENTS.md ([../_shared/doc
 for f in .rubstack AGENTS.md README.md DESIGN.md CHANGELOG.md CLAUDE.md; do
   [ -e "$f" ] && git add "$f"
 done
-git commit -m "docs: sync with current state"
+git commit -m "docs: sync with current state"   # on a branch, per ../_shared/git-workflow.md
 ```
 
 ## Step 4: Confirm

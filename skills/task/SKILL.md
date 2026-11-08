@@ -30,8 +30,10 @@ Find what's affected: read the relevant feature section in `.rubstack/engineerin
 ## Step 2: Fix as one vertical slice
 
 Implement only this change, entry point through to storage:
-- Match existing conventions and use the domain vocabulary from `CONTEXT.md`
-- No refactors, no shared infrastructure, no adjacent improvements
+- Match existing conventions and style, and use the domain vocabulary from `CONTEXT.md`
+- No refactors, no shared infrastructure, no adjacent improvements; mention unrelated dead code instead of deleting it, and remove only what your own change left unused
+- Smallest change that solves it: no speculative options, abstractions or error handling for impossible cases ([subtract-before-you-add](../_shared/principles/subtract-before-you-add.md))
+- If the request is ambiguous, name the interpretations and ask rather than picking one silently
 - If the change contradicts an acceptance criterion, that's expected for a behavior change — Step 4 fixes the spec, not the other way around
 
 ## Step 3: Verify
@@ -39,7 +41,7 @@ Implement only this change, entry point through to storage:
 Batch size is one, so verify directly (the /implement-vs-/qa split doesn't apply here):
 - Run static checks (typecheck, build, lint)
 - Run the narrowest test that covers the change; for a bug, write the failing test first if the suite makes that cheap
-- Exercise the change where it runs if a runtime is available (browser, simulator, CLI)
+- Exercise the change where it runs if a runtime is available: Playwright MCP for web, Argent MCP for an iOS simulator or Android emulator, the shell for a CLI. Passing static checks is not a reason to skip this ([prove-it-works](../_shared/principles/prove-it-works.md))
 
 Not verified → not done. Don't hand unverified changes back.
 
@@ -50,12 +52,12 @@ Not verified → not done. Don't hand unverified changes back.
 - **Behavior change**: patch the acceptance criterion in the affected spec to describe the new behavior (keep the Given/When/Then phrasing), with a dated one-line note ("Changed 2026-06-10: due date now resets on duplication").
 - **Micro-feature**: add a minimal spec section to `.rubstack/engineering/features.md` — status `done`, the acceptance criteria you just verified phrased Given/When/Then, one-line implementation note. This keeps future `/qa` runs covering it.
 - Touch `.rubstack/product/roadmap.md` only if the change alters something the roadmap states.
-- If a README or other public doc describes the old behavior, update it.
+- If a README or other public doc describes the old behavior, update it ([../_shared/writing.md](../_shared/writing.md)).
 - Commit the spec sync with (or right after) the code change — worktrees and future sessions only see committed `.rubstack/` content.
 
 ## Step 5: Report and recommend
 
-Report: what changed (files), how it was verified, which docs were synced.
+Commit on a branch and open a PR per [../_shared/git-workflow.md](../_shared/git-workflow.md). Report: what changed (files), how it was verified, which docs were synced.
 
 - User-visible change on a released product → "Run /ship for a patch release."
 - Internal-only → done, nothing else needed.

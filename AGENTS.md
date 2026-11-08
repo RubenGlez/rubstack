@@ -4,7 +4,7 @@ A Claude Code plugin, distributed through a git marketplace (this repo) and inst
 
 **Everything must work in both places.** A cloud session is a fresh Linux container: no `~/.claude/CLAUDE.md`, no SSH keys, no Homebrew, `gh` unauthenticated, nothing in `$HOME` that the plugin did not create. So:
 
-- Global rules live in `rules/rules.md` and reach the session through the SessionStart hook's stdout, not through `~/.claude/CLAUDE.md`.
+- There are no global rules injected into every session. A convention lives in the skill that applies it, or in `skills/_shared/` when several skills share it (`git-workflow.md`, `writing.md`, `principles/`).
 - GitHub access goes through `skills/_shared/github-access.md`: `gh` when authenticated, GitHub MCP tools otherwise.
 - Hooks are bash + `jq` + `python3` only, and every hook exits 0 unless it is deliberately blocking a tool call.
 - Nothing macOS-only (launchd, `pbcopy`, `~/Library`); `tests/smoke.sh` enforces it.
