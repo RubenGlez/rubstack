@@ -1,8 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.1.1 — 2026-11-08
 
 - `/metrics` state moves from this repo's `metrics-data` branch, now deleted, to the database of a private Artifact titled "rubstack metrics", so rubstack can be public. The skill pulls it to `~/.rubstack/metrics` (`state/`, `snapshots/`) and pushes changes back with ArtifactData; `weekly.sh` only runs the collector, and `collect.py` reads `state/config.json`. The weekly Routine's prompt has to do the pull and push.
+- The smoke test's key-permission check runs on macOS as well as Linux.
 
 ## 0.1.0 — 2026-11-08
 
