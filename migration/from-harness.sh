@@ -56,7 +56,7 @@ step "2. Uninstall harness"
 if [ -n "$HARNESS_DIR" ] && [ -f "$HARNESS_DIR/uninstall.sh" ]; then
   bash "$HARNESS_DIR/uninstall.sh"
 else
-  echo "harness not installed here (no ~/.harness_dir); skipping"
+  echo "harness not installed here (no $HOME/.harness_dir); skipping"
 fi
 
 # ── 3. Cloud key ───────────────────────────────────────────────────────────────
@@ -67,9 +67,9 @@ if [ "$CLOUD_KEY" = 1 ]; then
     command -v ssh-keygen >/dev/null || { echo "ssh-keygen not found; install OpenSSH and re-run" >&2; exit 1; }
     mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
     ssh-keygen -q -t ed25519 -N "" -f "$HOME/.ssh/rubstack_cloud" -C rubstack-cloud
-    echo "created ~/.ssh/rubstack_cloud"
+    echo "created $HOME/.ssh/rubstack_cloud"
   else
-    echo "~/.ssh/rubstack_cloud already exists"
+    echo "$HOME/.ssh/rubstack_cloud already exists"
   fi
   echo "Public key (grant it in each public repo; /migrate-docs does this for you):"
   echo "  $(cat "$HOME/.ssh/rubstack_cloud.pub")"
