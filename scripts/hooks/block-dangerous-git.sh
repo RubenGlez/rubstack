@@ -11,10 +11,20 @@ echo "$cmd" | grep -q '\bgit\b' || exit 0
 
 blocked=""
 
-# git push --force / -f (any position)
-echo "$cmd" | grep -qE '\bgit\b.*\bpush\b' && \
-  echo "$cmd" | grep -qE '(^|\s)(--force|-f)(\s|$)' && \
-  blocked="git push --force"
+# Push checks read one shell segment at a time, so a flag from another command
+# in the chain (`rm -f x && git push`) is not taken for a push flag.
+nl=$'\n'
+segments=${cmd//&&/$nl}
+segments=${segments//||/$nl}
+segments=${segments//;/$nl}
+segments=${segments//|/$nl}
+while IFS= read -r seg; do
+  echo "$seg" | grep -qE '\bgit\b.*\bpush\b' || continue
+  # git push --force / -f (any position within the push)
+  echo "$seg" | grep -qE '(^|\s)(--force|-f)(\s|$)' && blocked="git push --force"
+  # git push with +refspec (force push in disguise)
+  echo "$seg" | grep -qE '\s\+[a-zA-Z]' && blocked="git push +refspec"
+done <<< "$segments"
 
 # git reset --hard
 echo "$cmd" | grep -qE '\bgit\s+reset\s+--hard' && blocked="git reset --hard"
@@ -30,9 +40,6 @@ echo "$cmd" | grep -qE '\bgit\s+checkout\s+(\.|--\s+\.)(\s|$)' && blocked="git c
 
 # git restore . (discards all working tree changes; bare dot only)
 echo "$cmd" | grep -qE '\bgit\s+restore\s+\.(\s|$)' && blocked="git restore ."
-
-# git push with +refspec (force push in disguise)
-echo "$cmd" | grep -qE '\bgit\b.*\bpush\b.*\s\+[a-zA-Z]' && blocked="git push +refspec"
 
 # git stash drop / clear (discards stashed work)
 echo "$cmd" | grep -qE '\bgit\s+stash\s+(drop|clear)\b' && blocked="git stash drop/clear"

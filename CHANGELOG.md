@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- The dangerous-git hook checks force-push flags and `+refspec` per shell segment, so a flag from another command in the chain (`rm -f x && git push`) no longer blocks an ordinary push. A force push anywhere in a chain is still blocked.
+
 ## 0.1.1 — 2026-11-08
 
 - `/metrics` state moves from this repo's `metrics-data` branch, now deleted, to the database of a private Artifact titled "rubstack metrics", so rubstack can be public. The skill pulls it to `~/.rubstack/metrics` (`state/`, `snapshots/`) and pushes changes back with ArtifactData; `weekly.sh` only runs the collector, and `collect.py` reads `state/config.json`. The weekly Routine's prompt has to do the pull and push.

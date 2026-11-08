@@ -130,12 +130,18 @@ section "3. Guard hooks"
 t_blocks_force_push() { ! bash_hook block-dangerous-git.sh 'git push --force origin main'; }
 t_blocks_reset_hard() { ! bash_hook block-dangerous-git.sh 'git reset --hard HEAD~1'; }
 t_allows_push()       { bash_hook block-dangerous-git.sh 'git push -u origin feature'; }
+t_allows_push_after_rm_f() { bash_hook block-dangerous-git.sh 'rm -f node_modules && git push -u origin feature'; }
+t_blocks_chained_force()   { ! bash_hook block-dangerous-git.sh 'cd repo && git push origin main -f'; }
+t_blocks_refspec()         { ! bash_hook block-dangerous-git.sh 'git fetch; git push origin +main'; }
 t_blocks_spike()      { ! bash_hook block-prototype-commit.sh 'git add _spike/x.ts && git commit -m wip'; }
 t_allows_commit()     { local d; d=$(tmpdir); (cd "$d" && git init -q && bash_hook block-prototype-commit.sh 'git commit -m ok'); }
 
 check "Blocks git push --force"           t_blocks_force_push
 check "Blocks git reset --hard"           t_blocks_reset_hard
 check "Allows a normal git push"          t_allows_push
+check "Allows a push chained after rm -f"  t_allows_push_after_rm_f
+check "Blocks a chained push -f"           t_blocks_chained_force
+check "Blocks a +refspec push"             t_blocks_refspec
 check "Blocks committing _spike/ code"    t_blocks_spike
 check "Allows an ordinary commit"         t_allows_commit
 
