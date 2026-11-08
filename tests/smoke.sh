@@ -182,7 +182,7 @@ t_key_unlocks() {
   run_session_start "$p" RUBSTACK_DOCTIER_KEY="$FAKE_KEY" | grep -q 'decrypted .rubstack/' \
     && grep -q '^unlock key=.*rubstack_doctier' "$FAKE_HOME/doctier.log" \
     && grep -q 'DOCTIER_SSH_KEY' "$FAKE_HOME/env" \
-    && [ "$(stat -c %a "$FAKE_HOME/.ssh/rubstack_doctier")" = 600 ] \
+    && [ "$(stat -c %a "$FAKE_HOME/.ssh/rubstack_doctier" 2>/dev/null || stat -f %Lp "$FAKE_HOME/.ssh/rubstack_doctier")" = 600 ] \
     && grep -q plaintext "$p/.rubstack/qa/report.md"
 }
 t_bad_key_reported() {

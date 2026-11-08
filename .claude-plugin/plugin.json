@@ -2,7 +2,7 @@
   "name": "rubstack",
   "displayName": "rubstack",
   "version": "0.1.0",
-  "description": "Rubén's software factory for Claude Code: a skill chain from idea to shipped product (ideate → product-plan → dev-plan → prototype → implement → qa → update-docs → ship), plus evolve, task, review-diff, interrogate, next-step and more and guard hooks. Works the same on your machine and in Claude Code cloud sessions.",
+  "description": "Rubén's software factory for Claude Code: a skill chain from idea to shipped product, plus utility skills and guard hooks. Works the same locally and in Claude Code cloud sessions.",
   "author": {
     "name": "Ruben Glez"
   },

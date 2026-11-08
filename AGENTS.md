@@ -15,6 +15,8 @@ A Claude Code plugin, distributed through a git marketplace (this repo) and inst
 
 **Verification contract.** `/implement` slices are verified by static checks only (typecheck, build, lint). Behavioral verification is deferred to `/qa` by design. Do not add behavioral verification to subagent prompts.
 
+**README.** It is the user-facing map: when a skill, hook or setup step is added, renamed or removed, update its line there in the same change.
+
 **Tests.** `bash tests/smoke.sh` covers the manifests, skill structure and links, and every hook's behavior (doctier is stubbed). CI also runs ShellCheck.
 
 ## Release
