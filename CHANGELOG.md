@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 — unreleased
+## 0.1.0 — 2026-11-08
 
 First version, derived from the [harness](https://github.com/RubenGlez/harness) plugin (v0.3.2) and reshaped to run the same way locally and in Claude Code cloud sessions.
 
