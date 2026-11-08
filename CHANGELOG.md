@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.2 — 2026-11-08
 
 - The dangerous-git hook checks force-push flags and `+refspec` per shell segment, so a flag from another command in the chain (`rm -f x && git push`) no longer blocks an ordinary push. A force push anywhere in a chain is still blocked.
 
