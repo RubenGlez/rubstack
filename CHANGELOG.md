@@ -10,3 +10,4 @@ First version, derived from the [harness](https://github.com/RubenGlez/harness) 
 - doctier is for public repos only: private repos keep `.rubstack/` as plain files, with no setup, and `/migrate-docs` drops doctier from private repos that still use it.
 - Cloud sessions can read encrypted docs in public repos: the SessionStart hook installs doctier and unlocks `.rubstack/` with a dedicated key from `RUBSTACK_DOCTIER_KEY`.
 - Skills that used `gh` fall back to GitHub MCP tools when `gh` is not authenticated.
+- `/metrics` state moves from `~/.harness/metrics` to the `metrics-data` branch, and weekly collection runs as a cloud Routine (`skills/metrics/scripts/weekly.sh`) instead of a macOS launchd job. Cloud runs skip GitHub sources.

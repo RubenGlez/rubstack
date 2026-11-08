@@ -204,8 +204,26 @@ def cmd_init():
 # collectors
 # --------------------------------------------------------------------------
 
+_GH_READY = None
+
+
+def gh_ready():
+    """Whether `gh` can call the API. In a cloud session it can only search, so
+    every GitHub source is skipped with one clear reason instead of failing per call."""
+    global _GH_READY
+    if _GH_READY is None:
+        try:
+            out = subprocess.run(["gh", "auth", "status"], capture_output=True, text=True, timeout=30)
+            _GH_READY = out.returncode == 0
+        except (OSError, subprocess.TimeoutExpired):
+            _GH_READY = False
+    return _GH_READY
+
+
 def collect_github(full_name, backfill):
     out, gaps = {}, []
+    if not gh_ready():
+        return {}, [{"source": "github", "reason": "gh not authenticated (cloud run); stars, releases and traffic need a local run"}]
     repo, err = gh("api", f"repos/{full_name}")
     if err:
         return {}, [{"source": "github", "reason": err}]
