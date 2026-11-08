@@ -12,6 +12,12 @@ rubstack is installed through your claude.ai account, so it follows you everywhe
 2. Add the `rubstack` plugin from that marketplace, and turn on **Sync automatically** so new releases arrive by themselves.
 3. Start a new Claude Code session. The plugin loads as `rubstack@synced` — locally (Claude Code v2.1.273+, signed in with your claude.ai account) and in cloud sessions. Locally, run `/reload-plugins` if it synced after the session started.
 
+Without a claude.ai account sync (for example on a machine signed in with an API key), install it per machine instead:
+
+```text
+/plugin install rubstack --marketplace RubenGlez/rubstack
+```
+
 Skills are invoked by name, like `/implement`. Use `/rubstack:implement` only if another plugin has a skill with the same name.
 
 **Working on rubstack itself:** start Claude Code with `claude --plugin-dir /path/to/rubstack` to load your working copy for that session; it takes precedence over the synced copy.
@@ -143,9 +149,10 @@ These can be used at any point in the workflow.
 
 ## Migrating from harness
 
-1. Remove harness: `bash uninstall.sh` in your harness clone (it also removes the harness rules block from `~/.claude/CLAUDE.md`; rubstack has no global rules, each skill carries the conventions it needs).
-2. Install rubstack as above.
-3. In each project, run `/migrate-docs`: it moves `.harness/` to `.rubstack/`, drops doctier in private repos (plain files from then on) and keeps the docs encrypted in public ones. Fleet mode does every repo in one sweep.
+On your machine, with the plugin installed from your account:
+
+1. `bash migration/from-harness.sh` in a clone of this repo. It moves your `/metrics` state onto the `metrics-data` branch, runs harness's `uninstall.sh` (plugin, rules block in `~/.claude/CLAUDE.md`, status line, metrics launchd job), and creates the cloud key for public repos, printing the value for `RUBSTACK_DOCTIER_KEY`. Safe to re-run.
+2. In each project, run `/migrate-docs` (or fleet mode from your workspace): it moves `.harness/` to `.rubstack/`, drops doctier in private repos, and keeps public repos encrypted while granting the cloud key.
 
 ## Metrics
 
