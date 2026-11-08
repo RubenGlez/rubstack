@@ -1,0 +1,155 @@
+---
+name: write-a-skill
+description: Create new rubstack skills with proper structure, progressive disclosure, and bundled resources. Use when user wants to create, write, or build a new skill.
+---
+
+# Writing Skills
+
+Skills live in `skills/<name>/` within this repo and are available as `/<name>` (or `/rubstack:<name>` when another plugin uses the same name) once installed. Run `/reload-skills` to pick up a new one mid-session. Every skill must work both locally and in a cloud session: no macOS-only commands, no paths under the user's home that a fresh container lacks, and a fallback when `gh` is not authenticated (see [../_shared/github-access.md](../_shared/github-access.md)).
+
+## Process
+
+1. **Gather requirements** - ask user about:
+   - What task/domain does the skill cover?
+   - What specific use cases should it handle?
+   - Does it need executable scripts or just instructions?
+   - Any reference materials to include?
+
+2. **Draft the skill** - create:
+   - `skills/<name>/SKILL.md` with concise instructions
+   - Additional reference files if content exceeds 500 lines
+   - Utility scripts if deterministic operations needed
+
+3. **Review with user** - present draft and ask:
+   - Does this cover your use cases?
+   - Anything missing or unclear?
+   - Should any section be more/less detailed?
+
+## Skill Structure
+
+```
+skills/skill-name/
+├── SKILL.md           # Main instructions (required)
+├── REFERENCE.md       # Detailed docs (if needed)
+├── EXAMPLES.md        # Usage examples (if needed)
+└── scripts/           # Utility scripts (if needed)
+    └── helper.js
+```
+
+## SKILL.md Template
+
+```md
+---
+name: skill-name
+description: Brief description of capability. Use when [specific triggers].
+---
+
+# Skill Name
+
+## Quick start
+
+[Minimal working example]
+
+## Workflows
+
+[Step-by-step processes with checklists for complex tasks]
+
+## Advanced features
+
+[Link to separate files: See [REFERENCE.md](REFERENCE.md)]
+```
+
+## Invocation
+
+Decide who can fire the skill before writing the description; it changes how the description is written.
+
+- **Model-invoked** (default): the agent can reach for it on its own, and the user can type it. Use when the agent could usefully pick it up mid-task (e.g. `/task`, `/review-diff`). The description is model-facing and carries the triggers (see below).
+- **User-invoked**: only the user can fire it. Add `disable-model-invocation: true` to the frontmatter. Use for skills that are expensive, outward-facing or a matter of taste, where firing by accident costs more than typing the name (e.g. `/zoom-out`). The description is human-facing: one short line, no trigger list.
+
+A user-invoked skill can't be reached by another skill. If a step needs one, tell the user to run it; don't instruct the agent to load it.
+
+## Description Requirements
+
+The description is **the only thing your agent sees** when deciding which skill to load. It's surfaced in the system prompt alongside all other installed skills. Your agent reads these descriptions and picks the relevant skill based on the user's request.
+
+**Goal**: Give your agent just enough info to know:
+
+1. What capability this skill provides
+2. When/why to trigger it (specific keywords, contexts, file types)
+
+**Format**:
+
+- Max 1024 chars
+- Write in third person
+- First sentence: what it does
+- Second sentence: "Use when [specific triggers]"
+
+**Good example**:
+
+```
+Extract text and tables from PDF files, fill forms, merge documents. Use when working with PDF files or when user mentions PDFs, forms, or document extraction.
+```
+
+**Bad example**:
+
+```
+Helps with documents.
+```
+
+Descriptions sit in every session's context, so prune them hard: lead with the word that does the triggering, list one trigger per distinct case (synonyms for the same case count once), and leave out anything the body already says. The same applies to any line in `AGENTS.md` or a skill that points at another doc: its wording, not the target, decides whether the agent follows it.
+
+## Steps and completion criteria
+
+End every step on a condition the agent can check: "a command that went red at least once", "every `done` feature has a result", not "understand the code" or "review the changes". A vague criterion invites the agent to rush the step to reach the next one. Raise the bar in the wording when thoroughness matters ("every caller migrated", "each finding reproduced").
+
+## When to Add Scripts
+
+Add utility scripts when:
+
+- Operation is deterministic (validation, formatting)
+- Same code would be generated repeatedly
+- Errors need explicit handling
+
+Scripts save tokens and improve reliability vs generated code.
+
+## When to Split Files
+
+Split into separate files when:
+
+- SKILL.md outgrows the core workflow (~120 lines) — move templates, long examples, and reference detail to REFERENCE.md
+- Content has distinct domains
+- Advanced features are rarely needed
+
+The test: keep in SKILL.md what every run needs; move behind a link what only some runs reach (a runtime note, a template, a rare branch). Keep a concept's rules and caveats together under one heading rather than scattered.
+
+## Rubstack Conventions
+
+**Workflow vs. standalone** — decide before drafting:
+- *Workflow skill*: fits in the ideate → ship chain. End with a recommended next step (e.g. "Run /qa to verify."). The user invokes it at a specific phase.
+- *Standalone skill*: callable at any time, independent of phase (e.g. `/improve-codebase-architecture`, `/task`). Don't recommend a "next step" — just report what was done.
+
+**rubstack doc paths** — if the skill reads or writes project state, use these standard locations:
+- `.rubstack/product/CONTEXT.md` — domain vocabulary; use exact terms in all output and generated code
+- `.rubstack/product/` — product.md, roadmap.md, ux.md, competitors.md
+- `.rubstack/engineering/` — architecture.md, implementation-plan.md, features.md
+- `.rubstack/adr/` — architectural decision records
+- `.rubstack/qa/report.md` — QA output
+
+**Subagents** — when spawning subagents, pass file *paths*, not file contents. Subagents have full repo access. Only pass content directly for small, critical excerpts (e.g. the full text of a feature spec the agent must implement).
+
+**Cross-skill references** — link to other skills' docs with relative paths (e.g. `../dev-plan/REFERENCE.md`).
+
+## Review Checklist
+
+After drafting, verify:
+
+- [ ] Invocation chosen; model-invoked descriptions include triggers ("Use when..."), user-invoked ones are one human-facing line with `disable-model-invocation: true`
+- [ ] Name doesn't collide with a built-in command or a skill from another installed plugin (e.g. `/code-review`, `/review`, `/init`)
+- [ ] Every step ends on a checkable completion criterion
+- [ ] SKILL.md holds the workflow; templates, long examples, and reference detail live in REFERENCE.md
+- [ ] Workflow vs. standalone positioning is clear
+- [ ] rubstack doc paths used where relevant
+- [ ] No time-sensitive info
+- [ ] Consistent terminology
+- [ ] Concrete examples included
+- [ ] References one level deep

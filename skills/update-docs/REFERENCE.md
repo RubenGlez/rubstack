@@ -1,0 +1,82 @@
+# Update Docs — Reference
+
+## Subagent A: Internal docs
+
+These files are for internal consumption. Write with full technical depth — include rationale, tradeoffs, and decisions. Do not soften for a public audience. Only update a file if the current-state summary affects it. Never link to `.rubstack/` from public docs.
+
+**.rubstack/product/product.md** — update if the product's purpose, audience, positioning, or direction changed.
+
+**.rubstack/product/roadmap.md** — update if features were completed (check them off), added, or reprioritized.
+
+**.rubstack/product/competitors.md** — update only if the competitive landscape changed.
+
+**.rubstack/product/ux.md** — update if user workflows or design direction changed.
+
+**.rubstack/product/CONTEXT.md** — update if new domain terms were introduced or existing terms refined. Only add terms that are genuinely ambiguous or product-specific; remove terms that became self-evident.
+
+**.rubstack/engineering/architecture.md** — update if the system structure, components, data flow, or stack changed.
+
+**.rubstack/engineering/implementation-plan.md** — update completed tasks, add new ones, remove obsolete ones.
+
+**.rubstack/adr/** — add a new ADR only if a significant architectural decision was made that isn't already recorded. Sequence continues from the highest existing number.
+
+**.rubstack/engineering/features.md** — update Status if a feature moved to `done` or `blocked`. Update implementation notes if meaningful context was added. Do not change acceptance criteria retroactively.
+
+**.rubstack/qa/report.md** — add a new report entry at the top if a new QA cycle was run; keep previous entries.
+
+---
+
+## Subagent B: Public docs
+
+These files are visible on GitHub and to anyone who reads the repository. No links to `.rubstack/`, no internal strategy, no implementation details.
+
+### README.md
+
+Audience: GitHub visitors and potential users evaluating the project. The README is a public landing page, not a developer guide.
+
+**Include:**
+- What the product is and the problem it solves (one paragraph)
+- Who it's for
+- Key features (user-facing, not architectural)
+- How to install and get started
+- Basic usage examples
+
+**Never include:**
+- Internal architecture decisions or ADRs
+- Implementation details (which library handles what)
+- Agent-specific context or conventions
+- Developer or contributor content: dev-environment setup, build-from-source steps, how to run tests, contribution guidelines, release process. If a setup fact is durable and an agent needs it, it belongs in `AGENTS.md`, not the README.
+- Anything from `.rubstack/`
+
+Keep it short. A README that requires scrolling to find the install command has failed.
+
+### DESIGN.md *(only if UI design tokens changed)*
+
+Uses the [DESIGN.md format](https://github.com/google-labs-code/design.md). YAML front matter holds exact token values; markdown prose explains rationale. Validate: `npx @google/design.md@0.2.0 lint DESIGN.md`
+
+**Include:** color palette, typography, spacing, border-radius, key component tokens.
+
+**Never include:** UX rationale from `.rubstack/product/ux.md`, competitive positioning, or references to `.rubstack/`.
+
+### CHANGELOG.md *(only if new features or fixes were shipped)*
+
+Follow [Keep a Changelog](https://keepachangelog.com) format. Add a new version entry at the top. List user-facing changes only — no internal refactors or doc-only changes.
+
+### CLAUDE.md
+
+Must contain exactly one line: `@AGENTS.md`. If it doesn't exist, create it. If it has content beyond `@AGENTS.md`, replace it.
+
+### AGENTS.md
+
+Include durable, agent-facing project facts that are not reliably inferable from the repo itself. Good candidates: human decisions, non-obvious constraints, external setup assumptions, workflow conventions, and project-specific exceptions to global rules.
+
+**Never include:** commands from package.json, architecture descriptions, file structure, or links to `.rubstack/` files. AGENTS.md is a public committed file — hand-written references to private content don't belong there.
+
+**Exception:** the block between `<!-- doctier:begin -->` and `<!-- doctier:end -->` is machine-managed by `doctier agents --write` — preserve it verbatim, never hand-edit or delete it. (Its `.rubstack/` paths are valid in every clone; the files exist as encrypted blobs.)
+
+If nothing qualifies, leave AGENTS.md empty or with a single blank line. Keep it concise, but do not remove useful context just because the file is no longer nearly empty.
+
+### Project sync standard
+
+Verify: `CLAUDE.md` contains only `@AGENTS.md`, and `AGENTS.md` contains only genuinely undiscoverable, durable project facts (or nothing). If either file drifts, restore it.
+

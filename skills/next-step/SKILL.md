@@ -1,0 +1,66 @@
+---
+name: next-step
+description: Recommends the next rubstack skill to use by inspecting the repo, docs, git state, and recent work. Use when asking what to do next, which skill comes next, or when the workflow phase is unclear.
+---
+
+# Next Step
+
+## Purpose
+
+Recommend the most likely next rubstack skill, with a short explanation and confidence level. Do not carry out the recommended skill unless the user explicitly asks you to switch to it.
+
+## What to inspect
+
+Read the smallest set of sources that can explain the current project state:
+- `AGENTS.md`
+- `README.md`
+- `.rubstack/` if it exists, especially product, engineering, and QA docs
+- `git status`, recent commits, and any obvious changed files
+- package or build files that describe the current stack
+
+If the repo has no `.rubstack/` docs, infer the phase from the codebase and README.
+
+**Cross-check the three status sources before recommending.** Phase state is not stored in one place — it lives in per-feature `Status:` lines (`.rubstack/engineering/features.md`), phase markers in `.rubstack/product/roadmap.md`, and the latest `.rubstack/qa/report.md`. These drift: a feature can read `done` while the roadmap still calls its phase planned, or QA can report failures the specs don't reflect. If they disagree, do not silently pick one — say so in the output and recommend `/update-docs` to reconcile them before trusting any phase recommendation.
+
+## Recommendation rules
+
+Prefer the lowest unfinished step in the rubstack workflow:
+- No validated idea or target user -> `/ideate`
+- Idea exists, but vision is missing -> `/product-plan`
+- Vision exists, but architecture or stack is unresolved -> `/dev-plan`
+- Architecture is unclear only for one risky choice -> `/prototype`
+- Specs exist and implementation is ready -> `/implement`
+- Code changed and needs verification -> `/qa`
+- QA report has outstanding failures (not just architectural gaps) -> `/task` if small and contained, else re-spec via `/dev-plan` then `/implement`
+- Docs are stale after code changes -> `/update-docs`
+- QA passed and docs are current, but the phase isn't released -> `/ship`
+- Shipped product needs a meaningful new feature, behavior change, or extension (not a small tweak) -> `/evolve`
+- Shipped product needs a small fix, tweak, micro-feature, refactor, or perf fix -> `/task`
+- A risky or contested change is about to ship and nobody has tried to break it -> `/interrogate`
+- A branch or PR needs review against the repo's conventions and its feature spec -> `/review-diff`
+- Existing docs are scattered or outside rubstack structure -> `/migrate-docs`
+- `.rubstack/` exists but isn't git-tracked (gitignored, or `git ls-files .rubstack` is empty) -> `/migrate-docs` to adopt doctier encrypted tracking
+- Context is fragmented and a fresh agent would struggle -> `/handoff`
+- You need a broader map of the area before changing code -> `/zoom-out`
+- Stable codebase with architectural friction — tight coupling, shallow modules, hard-to-test seams -> `/improve-codebase-architecture`
+
+If multiple skills fit, choose the one that removes the biggest blocker first.
+
+## Output format
+
+Return:
+1. Recommended skill
+2. Why it is the best next step
+3. Evidence that led to the recommendation
+4. Confidence: high / medium / low
+5. One fallback skill if the recommendation is uncertain
+
+Keep the answer short and direct.
+
+## Example
+
+> **Recommended**: `/qa`
+> **Why**: Phase 1 features are marked `done` in `.rubstack/engineering/features.md` but no QA report exists yet.
+> **Evidence**: `git log` shows 8 commits since the last `/implement` run; `.rubstack/qa/report.md` is absent.
+> **Confidence**: high
+> **Fallback**: `/update-docs` if the acceptance criteria turn out to already be verified.

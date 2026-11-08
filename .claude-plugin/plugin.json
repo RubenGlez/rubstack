@@ -1,0 +1,39 @@
+{
+  "name": "rubstack",
+  "displayName": "rubstack",
+  "version": "0.1.0",
+  "description": "Rubén's software factory for Claude Code: a skill chain from idea to shipped product (ideate → product-plan → dev-plan → prototype → implement → qa → update-docs → ship), plus evolve, task, review-diff, interrogate, next-step and more, shared engineering rules, and guard hooks. Works the same on your machine and in Claude Code cloud sessions.",
+  "author": {
+    "name": "Ruben Glez"
+  },
+  "homepage": "https://github.com/RubenGlez/rubstack",
+  "repository": "https://github.com/RubenGlez/rubstack",
+  "license": "MIT",
+  "skills": "./skills/",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/hooks/block-dangerous-git.sh\"" },
+          { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/hooks/block-prototype-commit.sh\"" }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/hooks/lint-design.sh\"" }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/hooks/session-start.sh\"", "timeout": 120 }
+        ]
+      }
+    ]
+  }
+}
