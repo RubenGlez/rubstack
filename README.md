@@ -100,11 +100,11 @@ In claude.ai/code → environment → Edit, on a **personal** environment:
 
 ## Metrics
 
-`/metrics` keeps its state in a separate private repo, `RubenGlez/rubstack-metrics` (cloned to `~/.rubstack/metrics`), never in this public one. A weekly cloud Routine runs `skills/metrics/scripts/weekly.sh` with that repo attached, but without the GitHub API; run `/metrics` locally at least every 14 days so GitHub traffic data isn't lost.
+`/metrics` keeps its state (config, bets, weekly snapshots) in the database of a private Artifact titled "rubstack metrics", never in a repo. Each run pulls it to `~/.rubstack/metrics` with ArtifactData, runs `skills/metrics/scripts/weekly.sh`, and pushes the new snapshot and any state changes back. A weekly cloud Routine whose prompt does that pull and push runs it without GitHub access; run `/metrics` locally at least every 14 days so GitHub traffic data isn't lost.
 
 ## Migrating from harness
 
-1. On your machine, run `bash migration/from-harness.sh` from a clone of this repo. It moves metrics state to the private metrics repo, uninstalls harness, and creates the cloud key. Safe to re-run.
+1. On your machine, run `bash migration/from-harness.sh` from a clone of this repo. It copies harness metrics state to `~/.rubstack/metrics` for the next `/metrics` run to upload, uninstalls harness, and creates the cloud key. Safe to re-run.
 2. In each project, run `/migrate-docs` (or its fleet mode from your workspace).
 
 ## Credits
