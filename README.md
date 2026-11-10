@@ -100,7 +100,7 @@ In claude.ai/code → environment → Edit, on a **personal** environment:
 
 ## Metrics
 
-`/metrics` keeps its state (config, bets, weekly snapshots) in the database of a private Artifact titled "rubstack metrics", never in a repo. Each run pulls it to `~/.rubstack/metrics` with ArtifactData, runs `skills/metrics/scripts/weekly.sh`, and pushes the new snapshot and any state changes back. A weekly cloud Routine whose prompt does that pull and push runs it without GitHub access; run `/metrics` locally at least every 14 days so GitHub traffic data isn't lost.
+`/metrics` keeps its state (config, bets, weekly snapshots) in the database of a private Artifact titled "rubstack metrics", never in a repo. Each run pulls it to `~/.rubstack/metrics` with ArtifactData, runs `skills/metrics/scripts/weekly.sh`, and pushes the new snapshot and any state changes back. A weekly cloud Routine whose prompt does that pull and push, then the skill's weekly brief (which products have traction, which lever to pull, notified to your phone), runs it without GitHub access; run `/metrics` locally at least every 14 days so GitHub traffic data isn't lost.
 
 ## Migrating from harness
 

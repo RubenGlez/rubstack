@@ -39,7 +39,19 @@ The scripts work on a local mirror at `$RUBSTACK_METRICS_HOME` (default `~/.rubs
 3. **Push the snapshot.** `ArtifactData` `set`, collection `snapshots`, `doc_id` the date, `file_path` the printed path.
 4. **Push the state** before reporting: whatever this run changes in `config` or `recommendations`, edit the mirror file and write it back with `set` and `file_path`, pinned with `if_version`. On a version conflict, pull again and redo the change.
 
-A cloud Routine runs the same three steps every Monday. Without an authenticated `gh` (any cloud run), GitHub sources are recorded as gaps; only a local run fills in stars, releases and traffic. GitHub keeps traffic for 14 days, so tell the user when the last snapshot with traffic is more than 10 days old.
+A cloud Routine runs the same three steps every Monday and then the weekly brief below. Without an authenticated `gh` (any cloud run), GitHub sources are recorded as gaps; only a local run fills in stars, releases and traffic. GitHub keeps traffic for 14 days, so tell the user when the last snapshot with traffic is more than 10 days old.
+
+### Weekly brief (Routine runs)
+
+A Routine has nobody reading along, so a pushed snapshot is not a result. After step 3, turn the history into a decision and send it with `PushNotification` (summary in `<routine_summary>` tags, first sentence = the banner). Never end a run with only "pushed, N gaps".
+
+1. **Pick the baseline.** The newest snapshot whose products carry `github` data is the last *full* one; the snapshot just collected usually is not (cloud run). Compare against full snapshots only, and say which date the numbers come from and how many days old it is.
+2. **Rank by trend, not by level.** Per `product`, over at least 4 full snapshots: unique views (14 d), stars and npm downloads, plus Play/App Store installs and ratings. Ignore clones (CI, bots, mirrors) and treat a spike of more than 10x week over week as unverified until a non-bot cause is found. Judge each product against its own history, as Step 4 says.
+3. **Name where to invest.** Up to three products with a sustained rising trend (the lever to pull for each), at most two with a decay or an unexplained anomaly (what to verify), and the ones to pause. Every claim carries its numbers and dates.
+4. **Surface stale bets.** List open bets past `evaluate_after` that were never scored, so the next interactive `/metrics` run settles them.
+5. **Say when the data is hollow.** If the new snapshot has more than half its sources as gaps, lead with that and with what a local run would fill in; do not present gaps as zeros. Notify only when the brief has a lever, an anomaly, a stale bet or a data problem; stay silent on a week where nothing moved.
+
+The brief is read-only: it changes no state beyond the snapshot push.
 
 **First run only**, on the user's machine (`--init` needs `gh` to discover repos). If no artifact titled **rubstack metrics** exists, publish one: a small page that reads the store, with `capabilities` `{"db": {"rules": [{"path": "state", "read": "admin", "write": "admin"}, {"path": "snapshots", "read": "admin", "write": "admin"}]}}`. Then build the mirror. If `migration/from-harness.sh` already left state in it, use that. Otherwise:
 
@@ -112,7 +124,7 @@ Then issue new bets, at most one per product and ten in total, chosen by expecte
 
 The portfolio has a dual role: it is a product with its own `product.md` and the distribution channel for every project page hosted on it. Give it its own section, and mark shared-surface findings as multiplier levers.
 
-Publish an HTML dashboard as a private Artifact. `config.json` stores `dashboard.url` from the first run; pass it as `url` on every later publish so the panel stays at one address instead of minting a new one each month. Load the `artifact-design` and `dataviz` skills before building it. It must include the bet ledger and the skill's own hit rate, so a run that keeps recommending badly is visible as such.
+Publish an HTML dashboard as a private Artifact. It leads with the brief's answer, which products to invest in and which lever for each, before any table; a table of raw numbers is the appendix. `config.json` stores `dashboard.url` from the first run; pass it as `url` on every later publish so the panel stays at one address instead of minting a new one each month. Load the `artifact-design` and `dataviz` skills before building it. It must include the bet ledger and the skill's own hit rate, so a run that keeps recommending badly is visible as such.
 
 Write the dashboard's prose in Spanish — headline, dek, tile labels, table copy, bet descriptions, notes. Keep product names, URLs, and literal data-model tokens (bet `kind` values like `seo`/`distribution`/`geo`/`product`, the `product.md` filename, verdict labels `DOUBLE DOWN`/`PROMOTE`/`KEEP`/`KILL`/`NO DATA`) as-is rather than translated, since they're fixed vocabulary shared with `recommendations.json` and the verdict rules above. Use Spanish decimal commas and thousands spacing for numbers (`25,2`, `16 830`).
 
