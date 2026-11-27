@@ -60,6 +60,7 @@ Read the snapshot. Do not re-fetch anything the collector already gathered.
 - **`sites`** — landing pages the collector could not infer.
 - **`geo_queries`** — derive from the audience and problem in each product's `.rubstack/product/product.md`, present them for approval, then freeze. Changing a frozen set starts a new series: bump `geo_queries_version` and never compare across versions.
 - **`posthog`** (optional) — where a product's in-app analytics live: project, the filter that isolates this app in a shared project, the dashboards worth reading, the capture event that is the source of truth for each survey, and what to exclude. The model reads it in Step 5; `collect.py` ignores it. Schema in [REFERENCE.md](REFERENCE.md).
+- **`feedback_email`** (optional) — `{"query": "<Gmail search that isolates this product's feedback mail>"}`, for products that also take feedback by email (a mailto fallback in the app, an older form that sent mail). Read through the Gmail connector in Step 5.
 - **`queued_bets`** (optional) — bet ideas held back because the product already has its live bet. Step 8 reads them once that bet settles.
 
 `--init` keeps keys it does not own, so these survive a re-run.
@@ -84,13 +85,18 @@ Products whose declared purpose is a showcase are judged on audience signal, not
 
 ## Step 5: User voice
 
-For each `product` whose config has a `posthog` block, read what its users say in in-app surveys and feedback since the last read stored in `posthog.reads`. Traction says whether people come; this says what the ones who came want. Query through the PostHog MCP server when it is connected, the browser otherwise (see [REFERENCE.md](REFERENCE.md)).
+For each `product` whose config has a `posthog` or `feedback_email` block, read what its users say since the last read stored in `posthog.reads`. Traction says whether people come; this says what the ones who came want. Two channels:
+
+- **In-app surveys and feedback**, through the PostHog MCP server when it is connected, the browser otherwise (see [REFERENCE.md](REFERENCE.md)).
+- **The feedback mailbox**, when `feedback_email` is set and the Gmail connector is connected: search with its `query`, count the messages since the last read, drop empty bodies, spam and auto-replies, and paraphrase the themes. Without the connector, record the channel as unread this run, never as zero.
+
+Report each channel separately, then merge their themes into one read of what users ask for. The rules below apply to both.
 
 - **Source of truth.** When `posthog.sources_of_truth` names the app's own capture event for a survey, count that event, not the analytics tool's Surveys view: the mirror can hold fewer rows than the app sent.
 - **Clean first.** Drop test and placeholder answers (devices or ids in `posthog.exclude`, emulators, "test", strings too short to mean anything) before counting, and say how many were dropped.
-- **Read:** the response count; per choice question, the distribution (multi-select counted per option), how many ticked every option, and how many picked only one; splits by any segment the survey stores, such as experience level; the shown → opened → submitted funnel when the product logs it; and the recurring themes of the free text, paraphrased.
+- **Read:** the response count; per choice question, the distribution (multi-select counted per option), how many ticked every option, and how many picked only one; splits by any segment the survey stores, such as experience level; the shown → opened → submitted funnel when the product logs it; and the recurring themes of the free text, paraphrased. For the mailbox: the message count and its themes.
 - **Compare** against the previous entry in `posthog.reads`. A survey with zero real responses is "no signal yet", never "users are happy".
-- **Privacy.** Never copy emails, names or verbatim free text that could identify someone into the snapshot, the state or the dashboard. Store counts and paraphrased themes only.
+- **Privacy.** Never copy emails, names, sender addresses or verbatim free text that could identify someone into the snapshot, the state or the dashboard. Store counts and paraphrased themes only.
 - **Wishes are not behavior.** Survey demand can justify a bet's `rationale`; its `metric` must still be behavioral (usage, retention, installs), never the survey count.
 
 Record each read twice, with the date read and the window: under the product in today's snapshot as `user_voice` (re-push the snapshot), and appended to the product's `posthog.reads` in the config, which is what the next run compares against (Step 1's state push). This is attended work, like the browser sources: the weekly cron never does it, and a same-day collector rerun keeps the `user_voice` already in the snapshot.
@@ -131,7 +137,7 @@ When a product's live bet settles this run, look at its `queued_bets` before inv
 
 The portfolio has a dual role: it is a product with its own `product.md` and the distribution channel for every project page hosted on it. Give it its own section, and mark shared-surface findings as multiplier levers.
 
-Publish an HTML dashboard as a private Artifact. `config.json` stores `dashboard.url` from the first run; pass it as `url` on every later publish so the panel stays at one address instead of minting a new one each month. Load the `artifact-design` and `dataviz` skills before building it. It must include the bet ledger and the skill's own hit rate, so a run that keeps recommending badly is visible as such, and a **Voz del usuario** section per product with a user-voice read: response count, the distributions, the funnel, the themes, the change since the previous read, and how many test answers were dropped. A product with zero real responses says "sin señal todavía".
+Publish an HTML dashboard as a private Artifact. `config.json` stores `dashboard.url` from the first run; pass it as `url` on every later publish so the panel stays at one address instead of minting a new one each month. Load the `artifact-design` and `dataviz` skills before building it. It must include the bet ledger and the skill's own hit rate, so a run that keeps recommending badly is visible as such, and a **Voz del usuario** section per product with a user-voice read: response count per channel (in-app and email), the distributions, the funnel, the themes, the change since the previous read, and how many test answers were dropped. A product with zero real responses says "sin señal todavía".
 
 Write the dashboard's prose in Spanish — headline, dek, tile labels, table copy, bet descriptions, notes. Keep product names, URLs, and literal data-model tokens (bet `kind` values like `seo`/`distribution`/`geo`/`product`, the `product.md` filename, verdict labels `DOUBLE DOWN`/`PROMOTE`/`KEEP`/`KILL`/`NO DATA`) as-is rather than translated, since they're fixed vocabulary shared with `recommendations.json` and the verdict rules above. Use Spanish decimal commas and thousands spacing for numbers (`25,2`, `16 830`).
 

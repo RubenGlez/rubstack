@@ -42,12 +42,13 @@ A bet without `metric`, a number in `prediction`, and `evaluate_after` is not a 
   "dashboards": [{"name": "...", "url": "...", "read": "what to read from it"}],
   "sources_of_truth": {"<survey or signal>": "event and properties to count"},
   "exclude": "devices or ids to drop (developer, emulator)",
-  "reads": [{"date": "YYYY-MM-DD", "window": "YYYY-MM-DD..YYYY-MM-DD", "responses": 0, "dropped_test": 0, "...": "counts and paraphrased themes"}]
+  "reads": [{"date": "YYYY-MM-DD", "window": "YYYY-MM-DD..YYYY-MM-DD", "responses": 0, "dropped_test": 0, "email_messages": 0, "...": "counts and paraphrased themes, per channel"}]
 },
+"feedback_email": {"query": "Gmail search that isolates this product's feedback mail, e.g. a subject prefix and the receiving address"},
 "queued_bets": [{"action": "...", "rationale": "...", "queued": "YYYY-MM-DD"}]
 ```
 
-`reads` is the user-voice history: one entry per attended read, counts and paraphrased themes only, never emails, names or quotable free text. Keep each entry small; the config shares the 256 KiB document limit.
+`reads` is the user-voice history for both channels (a product with only `feedback_email` still keeps its reads under `posthog.reads`): one entry per attended read, counts and paraphrased themes only, never emails, names or quotable free text. Keep each entry small; the config shares the 256 KiB document limit.
 
 A `queued_bets` entry is an idea held back because the product already has its one live bet. It is not a bet: it has no metric, number or date yet, and it never counts toward the cap. When the live bet settles, promote a queued idea into `recommendations` with all three, or drop it.
 
@@ -133,6 +134,7 @@ In-app surveys and feedback are first-party signal: the people already using the
 - **Small windows.** A few dozen answers in a short window is a lead, not a ranking. Give counts, not just percentages, and treat gaps of a few answers between options as a tie.
 - **Dropped test answers.** Developer devices, emulators, "test", "asdf" and one- or two-character strings are not users. Drop them before counting and say how many went. A survey whose real count is zero is "no signal yet".
 - **Funnel.** When the product logs shown → opened → submitted, report it: a low open rate is a placement problem, a low submit rate after opening is a survey design problem, and neither says anything about the product.
+- **The email channel.** A mailto fallback or an older form that sends mail carries real requests the analytics tool never sees. Read it through the Gmail connector with the product's `feedback_email.query`, drop empty bodies, spam and auto-replies, and count it as its own channel: one person's long email is not worth more than one survey answer. Store no sender names, addresses or quotable text.
 - **Segments.** If the survey stores a segment (experience level, plan, platform), split by it. A clear overall winner can be one segment's preference.
 
 Survey demand justifies a bet's rationale. It is never the bet's metric: what people say they want and what they then use are different numbers, and only the second can win or lose a bet.
