@@ -31,6 +31,27 @@ Use this only after `metrics` is triggered and the snapshot has been read.
 
 A bet without `metric`, a number in `prediction`, and `evaluate_after` is not a bet. Do not store it.
 
+### Optional per-product config keys (`state/config.json`, under `products.<name>`)
+
+`collect.py` never reads these; the model does. `--init` rebuilds each product entry from the keys it knows and keeps every other key as it was.
+
+```json
+"posthog": {
+  "project_id": 0,
+  "filter": "event-level filter that isolates this app in a shared project",
+  "dashboards": [{"name": "...", "url": "...", "read": "what to read from it"}],
+  "sources_of_truth": {"<survey or signal>": "event and properties to count"},
+  "exclude": "devices or ids to drop (developer, emulator)",
+  "reads": [{"date": "YYYY-MM-DD", "window": "YYYY-MM-DD..YYYY-MM-DD", "responses": 0, "dropped_test": 0, "email_messages": 0, "...": "counts and paraphrased themes, per channel"}]
+},
+"feedback_email": {"query": "Gmail search that isolates this product's feedback mail, e.g. a subject prefix and the receiving address"},
+"queued_bets": [{"action": "...", "rationale": "...", "queued": "YYYY-MM-DD"}]
+```
+
+`reads` is the user-voice history for both channels (a product with only `feedback_email` still keeps its reads under `posthog.reads`): one entry per attended read, counts and paraphrased themes only, never emails, names or quotable free text. Keep each entry small; the config shares the 256 KiB document limit.
+
+A `queued_bets` entry is an idea held back because the product already has its one live bet. It is not a bet: it has no metric, number or date yet, and it never counts toward the cap. When the live bet settles, promote a queued idea into `recommendations` with all three, or drop it.
+
 ### Verdict record
 
 Each product gets `verdict`, `evidence` (the specific numbers), `next_action`, and `confidence` (`high` when intent is declared and history exists, `low` when intent was inferred from a README or only one snapshot exists).
@@ -88,18 +109,35 @@ Formula download counts exist only for `homebrew-core`. Tools distributed throug
 
 These need OAuth or a signed JWT, which would mean a crypto dependency the rubstack installer deliberately avoids. Drive them through Claude in Chrome, in the user's session, and record what was read into the snapshot alongside the script's output.
 
+**PostHog first goes through its MCP server** when one is connected: HogQL through `execute-sql`, saved insights through `insight-query`, surveys through its survey commands. That is faster and exact, and it needs no browser. Fall back to the browser only when the MCP server is not connected.
+
 | Source | Where | What to read |
 |---|---|---|
 | Search Console | `search.google.com/search-console` | Per-page impressions, clicks, average position, top queries, last 28 days and the previous 28 |
 | Play Console | `play.google.com/console` | Store listing acquisition funnel: impressions, listing visits, installs, conversion rate |
 | App Store Connect | `appstoreconnect.apple.com` | Impressions, product page views, downloads, conversion, per storefront |
-| PostHog | project dashboard | Active users, retention, the activation event that matters for that product |
+| PostHog | MCP server, else project dashboard | Active users, retention, the activation event that matters for that product; in-app survey and feedback responses (see User voice) |
 
 Cloudflare Web Analytics is a bearer-token GraphQL API, so the collector handles it when `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are in the environment. Load them from lokalite with `get_secret` and `source`, never into a file.
 
-Browser collection is attended by definition. The daily cron runs the script only; anything from this table carries the date it was last read, and the dashboard shows that age.
+Browser collection is attended by definition, and so is the user-voice read even through the MCP server. The weekly cron runs the script only; anything from this table carries the date it was last read, and the dashboard shows that age.
 
 **A login page is a prompt to log in, not a reason to skip.** The user is present for this step — that is what "attended" means. If a navigation lands on a sign-in screen (Google, Apple ID, Play Console), stop there and ask the user to complete the login in that tab, then continue once it resolves. Do not treat an unauthenticated session as equivalent to an unreachable endpoint and move on quietly; that turns an "unknown" into a silent gap the report never surfaces as something the user could have fixed in thirty seconds. Only record a source as unread this run if the user says they can't log in right now — and say so explicitly in the report, not just as an absence.
+
+## User voice
+
+In-app surveys and feedback are first-party signal: the people already using the product, saying what they want next. A short survey with a few hundred answers can point clearly at which feature to grow. Read them carefully, because the usual mistakes all inflate the signal.
+
+- **The mirror trap.** The analytics tool's Surveys view is a mirror of the events it received as survey responses. When the app captures its own event (custom survey UI, a feedback sheet, a retry after offline), the mirror can hold fewer rows than the app sent. When `posthog.sources_of_truth` names the app's event, count that and treat the Surveys view as a cross-check. Report both if they differ.
+- **"Ticked everything" answers.** On a multi-select question, someone who ticks every option tells you little about priority. Count them separately and show the distribution with and without them.
+- **Per-option vs single-pick.** Multi-select options are counted per option, so the percentages sum past 100%. Report the per-option count alongside "picked only this", which is the cleaner preference signal. Never present per-option shares as if they were exclusive.
+- **Small windows.** A few dozen answers in a short window is a lead, not a ranking. Give counts, not just percentages, and treat gaps of a few answers between options as a tie.
+- **Dropped test answers.** Developer devices, emulators, "test", "asdf" and one- or two-character strings are not users. Drop them before counting and say how many went. A survey whose real count is zero is "no signal yet".
+- **Funnel.** When the product logs shown → opened → submitted, report it: a low open rate is a placement problem, a low submit rate after opening is a survey design problem, and neither says anything about the product.
+- **The email channel.** A mailto fallback or an older form that sends mail carries real requests the analytics tool never sees. Read it through the Gmail connector with the product's `feedback_email.query`, drop empty bodies, spam and auto-replies, and count it as its own channel: one person's long email is not worth more than one survey answer. Store no sender names, addresses or quotable text.
+- **Segments.** If the survey stores a segment (experience level, plan, platform), split by it. A clear overall winner can be one segment's preference.
+
+Survey demand justifies a bet's rationale. It is never the bet's metric: what people say they want and what they then use are different numbers, and only the second can win or lose a bet.
 
 ## GEO probing
 

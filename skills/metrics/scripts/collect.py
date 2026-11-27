@@ -170,7 +170,10 @@ def cmd_init():
         homepage = (repo.get("homepageUrl") or "").strip()
         if homepage and "npmjs.com" not in homepage and "github.com" not in homepage:
             inferred["sites"] = [homepage]
+        # Start from the stored entry so keys this script does not own (posthog,
+        # queued_bets, mcp_registry_name, ...) survive a re-init.
         products[name] = {
+            **entry,
             "repo": repo["nameWithOwner"],
             "private": repo["isPrivate"],
             # role is a judgment call: "product" or "support". Left null for the model.
@@ -188,6 +191,7 @@ def cmd_init():
     CONFIG.parent.mkdir(parents=True, exist_ok=True)
     CONFIG.write_text(
         json.dumps({
+            **existing,  # keep top-level keys this script does not own (dashboard, ...)
             "version": 1,
             "owner": login,
             "npm_maintainer": maintainer,
@@ -637,7 +641,8 @@ HISTORY_FIELDS = ("daily_history", "star_history")
 
 
 def preserve_history(old, new):
-    """Never let a plain run overwrite a backfilled snapshot for the same day.
+    """Never let a plain run overwrite a backfilled snapshot for the same day,
+    nor drop the user-voice read an attended run stored in it.
 
     Backfill is a one-time bootstrap and a scheduled run collects the same date
     without it, so writing blind would silently drop months of reconstructed
@@ -646,6 +651,9 @@ def preserve_history(old, new):
     """
     for name, product in new.get("products", {}).items():
         prior = old.get("products", {}).get(name, {})
+        # Written by the attended run, never by this script.
+        if "user_voice" not in product and "user_voice" in prior:
+            product["user_voice"] = prior["user_voice"]
         for field in HISTORY_FIELDS:
             if field not in product.get("github", {}) and field in prior.get("github", {}):
                 product["github"][field] = prior["github"][field]

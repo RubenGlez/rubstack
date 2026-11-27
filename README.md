@@ -60,7 +60,7 @@ Paths are under `.rubstack/`. `/implement → /qa → /update-docs` repeats per 
 | `/zoom-out` | Maps the modules and callers in an unfamiliar area |
 | `/improve-codebase-architecture` | Finds refactors that turn shallow modules into deep ones |
 | `/address-cves` | Finds and fixes high and critical dependency CVEs across all your repos |
-| `/metrics` | Fleet-wide traction review; scores last run's recommendations |
+| `/metrics` | Fleet-wide traction, user-voice and discoverability review; scores last run's recommendations |
 | `/write-a-skill` | Creates a new rubstack skill |
 
 ## Project docs: `.rubstack/`
