@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.3 — 2026-11-27
+
+- `/metrics` reads what users say: a new "User voice" step (Step 5) counts in-app survey and feedback responses per product since the last read (choice distributions, "ticked everything" and single-pick counts, segment splits, the shown → opened → submitted funnel, paraphrased free-text themes), drops test answers, and compares against the previous read. It counts the app's own capture event when the config names one, since the analytics tool's survey view can hold fewer rows. Only counts and paraphrased themes are stored, and survey demand can back a bet's rationale but never be its metric. The dashboard gets a "Voz del usuario" section per product. Later steps are renumbered.
+- `/metrics` config takes an optional per-product `posthog` block (project, app filter, dashboards, sources of truth, exclusions, past reads) and a `queued_bets` list of ideas held until the product's live bet settles. PostHog is read through its MCP server when connected, the browser otherwise.
+- `collect.py --init` keeps config keys it does not own, per product and at the top level, instead of dropping them, and a same-day collector rerun keeps the snapshot's user-voice read.
+
 ## 0.1.2 — 2026-11-08
 
 - The dangerous-git hook checks force-push flags and `+refspec` per shell segment, so a flag from another command in the chain (`rm -f x && git push`) no longer blocks an ordinary push. A force push anywhere in a chain is still blocked.

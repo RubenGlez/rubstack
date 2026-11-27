@@ -208,6 +208,56 @@ check "Reports a malformed key"                          t_bad_key_reported
 check "Points legacy .harness/ repos at /migrate-docs"   t_legacy_layout
 check "Exits 0 even when the project dir is missing"     t_always_exit_0
 
+# ── 5. Metrics collector ───────────────────────────────────────────────────────
+
+section "5. Metrics collector"
+
+# Run cmd_init on a seeded config with gh and npm stubbed out: keys the
+# collector does not own (posthog, queued_bets, dashboard, ...) must survive.
+t_init_keeps_unknown_keys() {
+  local home; home=$(tmpdir); mkdir -p "$home/state"
+  cat > "$home/state/config.json" <<'JSON'
+{"owner": "someone", "dashboard": {"url": "https://example.invalid/d"},
+ "products": {"app": {"role": "product", "mcp_registry_name": "io.example/app",
+   "posthog": {"project_id": 0, "reads": [{"date": "2026-01-01"}]},
+   "queued_bets": [{"action": "later"}]}}}
+JSON
+  RUBSTACK_METRICS_HOME="$home" python3 - "$ROOT/skills/metrics/scripts" <<'EOF' || return 1
+import sys
+sys.path.insert(0, sys.argv[1])
+import collect
+collect.discover_repos = lambda: ("someone", [{"name": "app", "nameWithOwner": "someone/app", "isPrivate": True}])
+collect.npm_packages_by_maintainer = lambda m: ({}, None)
+collect.infer_publications = lambda n: {"play": [], "appstore": [], "sites": [], "portfolio_page": None}
+collect.cmd_init()
+EOF
+  python3 - "$home/state/config.json" <<'EOF'
+import json, sys
+c = json.load(open(sys.argv[1]))
+app = c["products"]["app"]
+assert c["dashboard"]["url"] == "https://example.invalid/d"
+assert app["role"] == "product" and app["repo"] == "someone/app"
+assert app["mcp_registry_name"] == "io.example/app"
+assert app["posthog"]["reads"][0]["date"] == "2026-01-01"
+assert app["queued_bets"][0]["action"] == "later"
+EOF
+}
+
+t_rerun_keeps_user_voice() {
+  python3 - "$ROOT/skills/metrics/scripts" <<'EOF'
+import sys
+sys.path.insert(0, sys.argv[1])
+import collect
+old = {"products": {"app": {"github": {}, "user_voice": {"date": "2026-01-01", "responses": 3}}}}
+new = {"products": {"app": {"github": {}}}}
+collect.preserve_history(old, new)
+assert new["products"]["app"]["user_voice"]["responses"] == 3
+EOF
+}
+
+check "collect.py --init keeps config keys it does not own" t_init_keeps_unknown_keys
+check "A same-day collector rerun keeps the user-voice read" t_rerun_keeps_user_voice
+
 # ── Summary ────────────────────────────────────────────────────────────────────
 
 echo ""
